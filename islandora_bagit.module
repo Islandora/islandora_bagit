@@ -1,0 +1,572 @@
+<?php
+
+/**
+ * @file
+ * Module to create BagIt Bags from Drupal nodes. Requires the library at
+ * https://github.com/scholarslab/BagItPHP. Consult the README.txt for
+ * installation instructions.
+ */
+
+/**
+ * Implementation of hook_permission().
+ */
+function islandora_bagit_permission() {
+  return array(
+    'create Islandora Bags' => array(
+      'title' => t('Create Islandora Bags'),
+      'description' => t('Create Islandora Bags'),
+    ),
+    'administer Islandora BagIt' => array(
+      'title' => t('Administer Islandora BagIt'),
+      'description' => t('Administer Islandora BagIt'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function islandora_bagit_menu() {
+  $items = array();
+
+/*
+  $items['admin/islandora/fits'] = array(
+    'title' => 'FITS Tool',
+    'description' => 'Configure the Islandora FITS extractor.',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer site configuration'),
+    'page arguments' => array('islandora_fits_admin_form'),
+    'file' => 'includes/admin.form.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+*/
+
+
+  $items['admin/islandora/bagit'] = array(
+    'title' => 'Islandora BagIt',
+    'description' => 'Configure Islandora BagIt.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_bagit_admin_settings'),
+    'access arguments' => array('administer Islandora BagIt'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['node/%node/bagit'] = array(
+    'access callback' => 'islandora_bagit_access_check',
+    'access arguments' => array(1),
+    'page callback' => 'islandora_bagit_create_bag',
+    'page arguments' => array(1),
+    'title' => 'BagIt',
+    'weight' => 5,
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+/**
+ * Admin settings form builder.
+ */
+function islandora_bagit_admin_settings() {
+  $form['islandora_bagit_library_dir'] = array(
+    '#title' => t('Location of the BagIt library'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_library_dir', 'BagItPHP'),
+    '#description' => t("Directory where the Scholars' Lab BagIt for PHP library
+      is installed, relative to sites/all/libraries. Do not use a leading or
+      trailing slash."),
+    '#maxlength' => 255,
+    '#required' => TRUE,
+  );
+  $form['islandora_bagit_bag_tmp_dir'] = array(
+    '#title' => t('Temporary directory for unserialized Bags'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()),
+    '#description' => t("Filesystem directory where the unserialized Bag
+      directories are written, named by node ID. Needs to exist and to be
+      writable by the web server. Do not include the trailing slash."),
+    '#maxlength' => 255,
+    '#required' => TRUE,
+  );
+
+  $form['islandora_bagit_delete_unserialized_bag'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Delete unserialized (zipped) Bags.'),
+    '#default_value' => variable_get('islandora_bagit_delete_unserialized_bag', 1),
+    '#description' => t('Check this option if you want to automatically delete 
+      unserialized Bags.'),
+  );
+
+  $bagit_output_dir = variable_get('file_public_path', conf_path() . '/files');
+  $form['islandora_bagit_bag_output_dir'] = array(
+    '#title' => t('Output directory for serialized Bags'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_bag_output_dir', $bagit_output_dir),
+    '#description' => t("Filesystem directory where serialized (.tgz or .zip) Bags
+      are written, named by node ID. Needs to exist and to be writable by the web
+      server. Do not include the trailing slash. If you want users to be able to
+      download the Bags, this directory needs to be below your site's file system directory."),
+    '#maxlength' => 255,
+    '#required' => TRUE,
+  );
+
+  $form['islandora_bagit_provide_download_link'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Provide link to download the Bag'),
+    '#default_value' => variable_get('islandora_bagit_provide_download_link', 1),
+    '#description' => t("This link will work only if 'Output directory for
+      serialized Bags' is accessible via the web."),
+  );
+
+  if (module_exists('token')) {
+    $token_help = t('Available replacement tokens include [site:name], [site:url],
+      [user:name], [site:login-url], [node:nid], [node:title], [node:url], [node:summary].');
+    $description =  t("Base name for the Bags. The node's nid is appended to this value,
+      unless you use the Token module to create a different name pattern. Available
+      replacement tokens are: [site:name], [site:url], [user:name], [node:nid],
+      [node:title], [node:url].");
+    $default_bag_name = variable_get('islandora_bagit_bag_name', 'Islandora-Bag-[node:nid]');
+  }
+  else {
+    $description =  t("Base name for the Bags. The node's nid is appended to this value.");
+    $default_bag_name = variable_get('islandora_bagit_bag_name', 'Bag-');
+  }
+  $form['islandora_bagit_bag_name'] = array(
+    '#title' => t('Bag name'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => $default_bag_name,
+    '#description' => $description,
+    '#maxlength' => 255,
+    '#required' => TRUE,
+  );
+
+  $form['islandora_bagit_show_messages'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display messages'),
+    '#default_value' => variable_get('islandora_bagit_show_messages', 1),
+    '#description' => t('Check this option if you want to display messages
+      associated with Bag creation to the end user.'),
+  );
+
+  $form['islandora_bagit_log_bag_creation'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Log the creation of Bags'),
+    '#default_value' => variable_get('islandora_bagit_log_bag_creation', 1),
+    '#description' => t('Check this option if you want to log the
+      creation of Bags to the Drupal watchdog.'),
+  );
+ $form['islandora_bagit_compression_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Compression type'),
+    '#default_value' => variable_get('islandora_bagit_compression_type', 'tgz'),
+    '#options' => array(
+      'tgz' => t('tgz'),
+      'zip' => t('zip'),
+    ),
+    '#description' => t('The compression used on serialized Bags.'),
+  );
+
+  $content_types = node_type_get_names();
+  foreach ($content_types as $type => $name) {
+    $type_options[$type] = $name;
+  }
+  $form['islandora_bagit_content_types'] = array(
+    '#title' => t('Content types'),
+    '#type' => 'checkboxes',
+    '#options' => $type_options,
+    '#default_value' => variable_get('islandora_bagit_content_types', array('')),
+    '#description' => t('Content types that can be exported as Bags.'),
+  );
+
+  $form['islandora_bagit_baginfo_settings'] = array(
+    '#title' => t('Bag metadata'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE, 
+    '#collapsed' => TRUE,
+    '#description' => t("Optional metadata written to the Bag's bag-info.txt file."),
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_transferring_organization'] = array(
+    '#title' => t('Organization transferring the content'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_transferring_organization', ''),
+    '#description' => t("Leave blank to omit from bag-info.txt."),
+    '#maxlength' => 255,
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_transferring_organization_address'] = array(
+    '#title' => t('Mailing address of the organization'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_transferring_organization_address', ''),
+    '#description' => t("Leave blank to omit from bag-info.txt."),
+    '#maxlength' => 255,
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_contact_name'] = array(
+    '#title' => t('Contact name'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_transferring_organization_address', ''),
+    '#description' => t("Person at the source organization who is responsible
+      for the content transfer. Leave blank to omit from bag-info.txt."),
+    '#maxlength' => 255,
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_contact_phone'] = array(
+    '#title' => t('Contact phone'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_contact_phone', ''),
+    '#description' => t("International format telephone number of person or
+      position responsible. Leave blank to omit from bag-info.txt."),
+    '#maxlength' => 255,
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_contact_email'] = array(
+    '#title' => t('Contact email'),
+    '#type' => 'textfield',
+    '#size' => 60,
+    '#default_value' => variable_get('islandora_bagit_contact_email', ''),
+    '#description' => t("Fully qualified email address of person or
+      position responsible. Leave blank to omit from bag-info.txt."),
+    '#maxlength' => 255,
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_bagging_date'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Bagging date'),
+    '#default_value' => variable_get('islandora_bagit_bagging_date', 0),
+    '#description' => t("Date (YYYY-MM-DD) that the content was prepared for
+      delivery."),
+  );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_payload_octetstream_sum'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Octetstream sum'),
+    '#default_value' => variable_get(''),
+    '#description' => t('The "octetstream sum" of the payload.'),
+  );
+ 
+  return system_settings_form($form);
+}
+
+/**
+ * Custom menu access callback. Checks node type and user privileges. If the
+ * current node's content type is not enabled for BagIt export, the BagIt tab
+ * should not show up.
+ */
+function islandora_bagit_access_check($node) {
+  // First, check the user's privileges.
+  if (!user_access('create Islandora Bags')) {
+    return FALSE;
+  }
+  if (islandora_bagit_check_node_type($node->type)) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Creates the Bag.
+ */
+function islandora_bagit_create_bag($node) {
+  if (!islandora_bagit_check_node_type($node->type)) {
+    return FALSE;
+  }
+
+  // Load the BagItPHP library.
+  $bagit_library_dir = variable_get('islandora_bagit_library_dir', 'BagItPHP');
+  if ($bagit_library_path = libraries_get_path($bagit_library_dir)) {
+    require_once($bagit_library_path . '/lib/bagit.php');
+  }
+
+  // Set up the Bag filename and the output directory.
+  if (module_exists('token')) {
+    $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-[node:nid]');
+    $bag_file_name = token_replace($bag_file_name, array('node' => $node));
+  }
+  else {
+    $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-') . $node->nid;
+  }
+  $bag_output_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') . '/' .
+    $bag_file_name;
+
+  // Because the BagItPHP library does some things by default if the bag output
+  // directory already exists (like read the fetch.txt file), we always need to
+  // delete the directory if it exists.
+  if (file_exists($bag_output_path)) {
+    rrmdir($bag_output_path);
+  }
+
+  // A list of all the files added to the bag, to show the user and add to
+  // watchdog.
+  $all_added_files = array();
+
+  // Create a new bag.
+  $bag = new BagIt($bag_output_path, TRUE, TRUE, TRUE);
+
+  // Iterate through all the plugins. Each plugin must return the paramters
+  // required for addFile() or FALSE if it doesn't want to create a file.
+  $plugins = islandora_bagit_get_plugins();
+  if (count($plugins)) {
+    foreach ($plugins as $plugin) {
+      module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
+      $plugin_init_function = $plugin . '_init';
+      // Process the copy and create plugins.
+      if (preg_match('/^(islandora_bagit_plugin_copy_|islandora_bagit_plugin_create_)/', $plugin)) {
+        if ($files_to_add = $plugin_init_function($node)) {
+          // Allow modules that implement hook_bagit_filter_files() to filter out files to copy.
+          if (preg_match('/^islandora_bagit_plugin_copy_/', $plugin)) {
+            foreach (module_implements('islandora_bagit_filter_files') as $module) {
+              $files_to_add = module_invoke($module, 'islandora_bagit_filter_files', $plugin, $files_to_add, $node);
+            }
+          }
+          foreach ($files_to_add as $file) {
+            $bag->addFile($file['path'], $file['name']);
+            $all_added_files[] = $file['path'];
+          }
+          $bag->update();
+        }
+      }
+
+      // Generate octetstream sum.
+      // if (variable_get('bagit_payload_octetstream_sum', 1)) {
+      //   bagit_get_octetstream_sum($all_added_files);
+      // }
+
+      // Process the fetch plugins.
+      if (preg_match('/^islandora_bagit_plugin_fetch_/', $plugin)) {
+        if ($urls_to_add = $plugin_init_function($node)) {
+          foreach ($urls_to_add as $file) {
+            $bag->fetch->add($file['url'], $file['name']);
+            $all_added_files[] = $file['url'];
+          }
+          $bag->update();
+        }
+      }
+    }
+  }
+  else {
+    drupal_set_message(t('There are no files to add to the Bag.'), 'warning');
+    watchdog('bagit', 'BagIt Bag not created for node !nid: plugins found no files.',
+      WATCHDOG_WARNING, array('!nid' => $node->nid));
+    return '';
+  }
+
+  // Get bag-info.txt metadata. 
+  $bag_info = islandora_bagit_create_baginfo();
+  foreach ($bag_info as $tag => $value) {
+    $bag->setBagInfoData($tag, $value);
+  }
+
+  // Allow other modules to modify the Bag using mymodule_bagit_alter($bag, $node).
+  // @todo: Determine how implementations of this hook can overwrite bag-info.txt values
+  // (e.g., if they add a file, Octetstream sum will need to be modified.
+  drupal_alter('islandora_bagit', $bag, $node);
+
+  // Write out the serialized (i.e., compressed) Bag.
+  $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
+    '/' . $bag_file_name;
+  $compression_type = variable_get('islandora_bagit_compression_type', 'tgz');
+  $bag->package($serialized_bag_path, $compression_type); 
+
+  if (variable_get('islandora_bagit_delete_unserialized_bag', 1)) {
+    rrmdir($bag_output_path);
+  }
+
+  // Delete the temp directory created by file create plugins, if it exists.
+  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . '/' . $node->nid;
+  if (file_exists($bag_tmp_dir)) {
+    rrmdir($bag_tmp_dir);
+  }
+
+  $serialized_all_added_files = implode(', ', $all_added_files);
+  if (variable_get('islandora_bagit_log_bag_creation', 1)) {
+    watchdog('islandora_bagit', 'BagIt Bag created for node !nid (!files).',
+      array('!nid' => $node->nid, '!files' => $serialized_all_added_files));
+  }
+
+  $serialized_bag_path .=  '.' . $compression_type;
+  if (variable_get('islandora_bagit_show_messages', 1)) {
+    drupal_set_message(t("Bag created and saved at %path", array(
+      '%path' => $serialized_bag_path,
+      )));
+    drupal_set_message(t("Files added: %files", 
+      array('%files' => $serialized_all_added_files)));
+  }
+
+  if (variable_get('islandora_bagit_provide_download_link', 1)) {
+    // file_build_uri() needs a relative path.
+    if (variable_get('islandora_file_default_scheme') == 'private') {
+      $drupal_files_path = variable_get('islandora_file_private_path');
+    }
+    else {
+      $drupal_files_path = variable_get('islandora_file_public_path', conf_path() . '/files');
+    }
+    $relative_bag_path = preg_replace("#$drupal_files_path#", '', $serialized_bag_path);
+    $download_path = file_create_url(file_build_uri($relative_bag_path));
+    return l(t('Download the Bag'), $download_path);
+  }
+  else {
+    return array();
+  }
+}
+
+/**
+ * Get list of plugin filenames.
+ */
+function islandora_bagit_get_plugins() {
+  $plugins = array();
+  $module_dir = drupal_get_path('module', 'islandora_bagit');
+  $plugin_files = file_scan_directory($module_dir . '/plugins', '/islandora_bagit_plugin_.*\.inc$/');
+  foreach ($plugin_files as $plugin) {
+    $plugins[] = $plugin->name;
+  }
+  return $plugins;
+}
+
+/**
+ * Implementation of hook_action_info().
+ */
+function islandora_bagit_action_info() {
+  // All actions are called with the $object and $context parameters. In the
+  // case of bagit_create_bag(), its first (and only) paramter is $node,
+  // which is a valid type of actions $object.
+  $info['islandora_bagit_create_bag'] = array(
+    'type' => 'node',
+    'label' => t('Generate Islandora Bags'),
+    'configurable' => FALSE,
+    'triggers' => array(
+      'node_view', 'node_insert', 'node_update', 'node_delete',
+     )
+  );
+  return $info;
+}
+
+/**
+ * Check whether the node type is in the list of content types
+ * allowed to have Bags created for them.
+ */
+function islandora_bagit_check_node_type($node_type) {
+  // Get the content types that the site admin has enabled for BagIt output.
+  $allowed_types = array();
+  foreach (variable_get('islandora_bagit_content_types', array()) as $key => $value) {
+    if ($value) {
+      $allowed_types[] = $key;
+    }
+  }
+  // Then check current node's content type against the allowed list.
+  if (in_array($node_type, $allowed_types)) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Utility function to get list of fields that are of 'file' or 'image' type.
+ */
+function islandora_bagit_get_fields_fileimage() {
+  $fields = array();
+  $result = db_query("SELECT field_name FROM {field_config} WHERE type = 'file' OR type = 'image'");
+  foreach ($result as $row) {
+    $fields[] = $row->field_name;
+  }
+  return $fields;
+}
+
+/**
+ * Utility function to allow plugins to build an associative array of extra information
+ * about the files they are managing. $raw_extras is an array of data that will be
+ * converted into an associative array containing key => value pairs of data that can
+ * be passed to hooks, etc. from plugins.
+ */
+function islandora_bagit_build_file_extra($raw_extras) {
+  $extra = array();
+  foreach ($raw_extras as $raw) {
+    if (is_object($raw)) {
+      $properties = get_object_vars($raw);
+      foreach ($properties as $property_key => $property_value) {
+        $extra[$property_key] = $property_value;
+      }
+    }
+    if (is_array($raw)) {
+      foreach ($raw as $array_key => $array_value) {
+        $extra[$array_key] = $array_value;
+      }
+    }
+  }
+  return $extra;
+}
+
+/**
+ * Implementation of hook_file_dowload().
+ */
+function islandora_bagit_file_download($uri) {
+  // Get the file's name.
+  $file_name = basename($uri);
+  // Get the file's size.
+  $path = variable_get('islandora_bagit_bag_output_dir', '') . '/' . $file_name;
+  // If the file is in the Bag output directory, this module controls
+  // access to it; if it's not, this module doesn't control access to
+  // it so we return NULL.
+  if (!file_exists($path)) {
+    return NULL;
+  }
+
+  if (user_access('create Islandora Bags')) {
+    $file_size = stat($path);
+    return array(
+      'Content-Type' => 'application/octet-stream',
+      'Content-Length' => $file_size['size'],
+      'Content-Disposition' => 'attachment; filename=' . $file_name,
+    );
+  }
+  else {
+    return -1;
+  }
+}
+
+/**
+ * Generates the value for the Payload-Oxum metadata tag.
+ */
+function islandora_bagit_get_octetstream_sum($file_list) {
+  $file_counter = 0;
+  $filesize_sum = 0;
+  foreach ($file_list as $file_path) {
+    $file_counter++;
+    $filesize_sum = filesize($file_path + $filesize_sum);
+  }
+  $_SESSION['islandora_bagit_octetstream_sum'] = $filesize_sum . '.' . $file_counter;
+}
+
+/**
+ * Adds metadata to the bag-info.txt metadata. Makes no attempt to wrap lines
+ * at 79 characters, as recommended by the spec.
+ */
+function islandora_bagit_create_baginfo() {
+  $bag_info = array();
+  if (strlen(variable_get('islandora_bagit_transferring_organization', ''))) {
+    $bag_info['Source-Organization'] = variable_get('islandora_bagit_transferring_organization', '');
+  }
+  if (strlen(variable_get('islandora_bagit_transferring_organization_address', ''))) {
+    $bag_info['Organization-Address'] = variable_get('islandora_bagit_transferring_organization_address', '');
+  }
+  if (strlen(variable_get('islandora_bagit_contact_name', ''))) {
+    $bag_info['Contact-Name'] = variable_get('islandora_bagit_contact_name', '');
+  }
+  if (strlen(variable_get('islandora_bagit_contact_phone', ''))) {
+    $bag_info['Contact-Phone'] = variable_get('islandora_bagit_contact_phone', '');
+  }
+  if (strlen(variable_get('islandora_bagit_contact_email', ''))) {
+    $bag_info['Contact-Email'] = variable_get('islandora_bagit_contact_email', '');
+  }
+  if (variable_get('islandora_bagit_bagging_date', 1)) {
+    $bag_info['Bagging-Date'] = date("Y-m-d");
+  }
+  // Generate octetstream sum. @problem: bag-info.txt values are generated prior to the creation of the file list.
+  if (variable_get('islandora_bagit_payload_octetstream_sum', 1)) {
+    $bag_info['Payload-Oxum'] = $_SESSION['islandora_bagit_octetstream_sum'];
+  }
+  return $bag_info;
+}
