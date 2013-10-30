@@ -28,20 +28,6 @@ function islandora_bagit_permission() {
  */
 function islandora_bagit_menu() {
   $items = array();
-
-/*
-  $items['admin/islandora/fits'] = array(
-    'title' => 'FITS Tool',
-    'description' => 'Configure the Islandora FITS extractor.',
-    'page callback' => 'drupal_get_form',
-    'access arguments' => array('administer site configuration'),
-    'page arguments' => array('islandora_fits_admin_form'),
-    'file' => 'includes/admin.form.inc',
-    'type' => MENU_NORMAL_ITEM,
-  );
-*/
-
-
   $items['admin/islandora/bagit'] = array(
     'title' => 'Islandora BagIt',
     'description' => 'Configure Islandora BagIt.',
@@ -50,13 +36,14 @@ function islandora_bagit_menu() {
     'access arguments' => array('administer Islandora BagIt'),
     'type' => MENU_NORMAL_ITEM,
   );
-  $items['node/%node/bagit'] = array(
-    'access callback' => 'islandora_bagit_access_check',
-    'access arguments' => array(1),
+  $items['islandora/object/%islandora_object/manage/bagit'] = array(
+    'title' => 'Create Bag',
     'page callback' => 'islandora_bagit_create_bag',
-    'page arguments' => array(1),
-    'title' => 'BagIt',
-    'weight' => 5,
+    // 'page callback' => 'islandora_fits_metadata_display',
+    'page arguments' => array(2),
+    'access callback' => 'islandora_bagit_access_check',
+    // 'access callback' => 'islandora_fits_metadata_access',
+    'access arguments' => array(2),
     'type' => MENU_LOCAL_TASK,
   );
   return $items;
@@ -252,12 +239,12 @@ function islandora_bagit_admin_settings() {
  * current node's content type is not enabled for BagIt export, the BagIt tab
  * should not show up.
  */
-function islandora_bagit_access_check($node) {
+function islandora_bagit_access_check($object) {
   // First, check the user's privileges.
   if (!user_access('create Islandora Bags')) {
     return FALSE;
   }
-  if (islandora_bagit_check_node_type($node->type)) {
+  if (islandora_bagit_check_node_type($object)) {
     return TRUE;
   }
   else {
@@ -446,7 +433,14 @@ function islandora_bagit_action_info() {
  * Check whether the node type is in the list of content types
  * allowed to have Bags created for them.
  */
-function islandora_bagit_check_node_type($node_type) {
+function islandora_bagit_check_node_type($object) {
+  if (isset($object['OBJ'])) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+/*
   // Get the content types that the site admin has enabled for BagIt output.
   $allowed_types = array();
   foreach (variable_get('islandora_bagit_content_types', array()) as $key => $value) {
@@ -461,6 +455,7 @@ function islandora_bagit_check_node_type($node_type) {
   else {
     return FALSE;
   }
+*/
 }
 
 /**
