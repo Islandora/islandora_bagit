@@ -7,7 +7,7 @@ Introduction
 BagIt (https://wiki.ucop.edu/display/Curation/BagIt) is a specification for
 packaging content and metadata about that content into a format that can be
 shared between applications. This module provides a "BagIt" tab for nodes that
-allows the packaging of the node and any files attached to the node into a Bag.
+allows the packaging of the datastreams in an Islandora (http://islandora.ca/) objects. 
 
 Installation
 ============
@@ -45,27 +45,20 @@ three types of plugins:
 
 1) file creation plugins
 2) file copy plugins
-// 3) file fetch plugins
 
 If you need to create a specific representation of the node to add to the Bag,
 or if you have other requirements not covered by the supplied plugins, you can
 use the supplied plugins described above to base your own on. If you write
 your own plugins, follow these guidelines:
 
-a) Begin plugin filenames with 'bagit_plugin_create_', 'bagit_plugin_copy_',
-   or 'bagit_plugin_fetch_', depending on what type of plugin you are writing.
-   Plugins must end in '.inc'.
+a) Begin plugin filenames with 'plugin_add' or 'plugin_copy_', depending on 
+   what type of plugin you are writing. Plugins must end in '.inc'.
 b) Every plugin has a function that is named the same as the filename
-   (minus the '.inc'), ending in '_init().' All init functions take a $node
-   object as the only parameter.
+   prepended with 'islandora_bagit_', ending in '_init().' All init functions 
+   take $islandora_object and $tmp_ds_directory parameters.
 c) Plugins complete all file writing and copying tasks before they return
-   the file's paths (or URLs, for fetch plugins) and names to the bagit module.
-d) If you write a file copy plugin, you can add 'extra' information to the
-   array passed back to the bagit.module that might be useful for implementors
-   of hook_bagit_filter_files(). See the function definition for
-   bagit_build_file_extra() in bagit.module, and instances of this function
-   in the bundled file copy plugins, for details.
-e) Plugins return FALSE if there is an error in copying or writing files,
+   the file's source and destination paths to the bagit module.
+d) Plugins return FALSE if there is an error in copying or writing files,
    or if they do no need to write files based on properties of the node.
   
 
