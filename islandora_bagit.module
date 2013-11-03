@@ -5,6 +5,10 @@
  * Module to create BagIt Bags from Islandora objects. Requires the library at
  * https://github.com/scholarslab/BagItPHP. Consult the README.txt for
  * installation instructions.
+ *
+ * @todo:
+ * -Add logic to create batches of Bags from collections.
+ * -Made single-item Bag creation and batch creation work from Drush.
  */
 
 /**
