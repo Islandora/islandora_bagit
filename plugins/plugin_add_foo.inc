@@ -2,35 +2,40 @@
 
 /**
  * @file
- * Plugin for the Islandora BagIt Drupal module that adds files attached to nodes using
- * the core Drupal 7 File or Image modules.
+ * File add plugin for the Islandora BagIt Drupal module. Illustrates creating
+ * a file called 'foo.xml' that lists all the datastream files for the object.
+ * 
+ * File add plugins create and write files to the Bag's temporary directory, and
+ * are fired before the file copy plugins. Any files they write to the temporary 
+ * directory are added to the Bag by the copy plugin.
  */
 
 /**
- * Returns an array of file paths and names. Returns FALSE if no file are
- * present or if FileField is not enabled.
+ * Always returns FALSE.
  */
 function islandora_bagit_plugin_add_foo_init($islandora_object, $tmp_ds_directory) {
-  $files_to_add = array();
+  $ds_files = islandora_bagit_get_ds_files($tmp_ds_directory);
 
-  // Get the directory listing for $tmp_ds_directory.
-  $ds_files = scandir($tmp_ds_directory);
-  // Get rid of the . and .. entries.
-  unset($ds_files[0]);
-  unset($ds_files[1]);
+  $fooxml = islandora_bagit_generate_foo_xml($ds_files);
+  file_put_contents($tmp_ds_directory . DIRECTORY_SEPARATOR . 'foo.xml', $fooxml);
 
-  file_put_contents($tmp_ds_directory . '/foo.txt', implode("\n", $ds_files));
+  return FALSE;
+}
 
-  $files_to_add[] =  array(
-      'path' => $tmp_ds_directory . '/foo.txt',
-      'name' => 'foo.txt',
-  );
-
-  if (count($files_to_add)) {
-    return $files_to_add;
+/**
+ * Uses XMLWriter to generate the METS XML.
+ */
+function islandora_bagit_generate_foo_xml($file_list) {
+  $foo = new XMLWriter();
+  $foo->openMemory();
+  $foo->setIndent(TRUE);
+  $foo->startDocument('1.0', 'utf-8', 'yes');
+  $foo->startElement('files');
+  foreach ($file_list as $filename) {
+    $foo->writeElement('file', $filename);
   }
-  else {
-    return FALSE;
-  }
+  $foo->endElement();
+  $foo->endDocument();
+  return $foo->outputMemory();
 }
 

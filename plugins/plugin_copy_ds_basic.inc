@@ -2,29 +2,31 @@
 
 /**
  * @file
- * Plugin for the Islandora BagIt Drupal module that adds files attached to nodes using
- * the core Drupal 7 File or Image modules.
+ * 'Datastram copy' plugin for the Islandora BagIt Drupal module.
+ *
+ * Registers all the datastreams in an Islandora object so they are
+ * copied into the 'data' directory.
  */
 
 /**
- * Returns an array of file paths and names. Returns FALSE if no file are
- * present or if FileField is not enabled.
+ * Returns an array of source and destination file paths. Returns FALSE if no 
+ * datastream files are present.
  */
 function islandora_bagit_plugin_copy_ds_basic_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
+  $ds_files = islandora_bagit_get_ds_files($tmp_ds_directory);
 
-  // Get the directory listing for $tmp_ds_directory.
-  $ds_files = scandir($tmp_ds_directory);
-  // Get rid of the . and .. entries.
-  unset($ds_files[0]);
-  unset($ds_files[1]);
-
+  // Add file source and dest to the $files_to_add array. $files_to_add['dest']
+  // must be relative to the Bag's dest subdirectory.
   foreach ($ds_files as $ds_filename) {
     // Add each file in the directory to $files_to_add.
-    $files_to_add[] = array(
-      'path' => $tmp_ds_directory . '/' . $ds_filename,
-      'name' => $ds_filename,
-    );
+    $source_file_to_add = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds_filename;
+    if (file_exists($source_file_to_add) && is_file($source_file_to_add)) {
+      $files_to_add[] = array(
+        'source' => $source_file_to_add,
+        'dest' => $ds_filename,
+      );
+    }
   }
 
   if (count($files_to_add)) {

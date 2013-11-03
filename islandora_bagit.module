@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Module to create BagIt Bags from Drupal nodes. Requires the library at
+ * Module to create BagIt Bags from Islandora objects. Requires the library at
  * https://github.com/scholarslab/BagItPHP. Consult the README.txt for
  * installation instructions.
  */
@@ -39,10 +39,7 @@ function islandora_bagit_menu() {
   $items['islandora/object/%islandora_object/manage/bagit'] = array(
     'title' => 'Create Bag',
     'page callback' => 'islandora_bagit_create_bag',
-    // 'page callback' => 'islandora_fits_metadata_display',
     'page arguments' => array(2),
-    // 'access callback' => 'islandora_bagit_access_check',
-    // 'access callback' => 'islandora_fits_metadata_access',
     'access arguments' => array('create Islandora Bags'),
     'type' => MENU_LOCAL_TASK,
   );
@@ -153,7 +150,7 @@ function islandora_bagit_admin_settings() {
     '#type' => 'checkboxes',
     '#options' => $plugin_options,
     '#default_value' => variable_get('islandora_bagit_plugins', array('')),
-    '#description' => t('Plugins are fired in their order in this list.'),
+    '#description' => t("Plugins are fired in their order in this list. You should only choose one 'copy' plugin."),
   );
 
   $form['islandora_bagit_baginfo_settings'] = array(
@@ -228,22 +225,25 @@ function islandora_bagit_admin_settings() {
  */
 function islandora_bagit_create_bag($islandora_object) {
   $pid = str_replace(':', '_', $islandora_object->id);
+  // $pid = islandora_escape_pid_for_function($islandora_object->id);
 
-  // Save all the datastreams to a temporary directory so they can be added to the Bag.
-  // We delete these files after creating the Bag.
+  // Save all the datastreams to a randomly named temporary directory so 
+  // they can be added to the Bag. We delete these files after creating the Bag.
   $random_string = substr(md5(rand()),0,7);
   $tmp_ds_directory = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . 
     '/islandora_bagit_tmp/' . $random_string;
   if (!file_exists($tmp_ds_directory)) {
     mkdir($tmp_ds_directory, 0777, TRUE);
   }
-  
+ 
+  // Iterate through the Islandora object and save all datastreams as
+  // files. Plugins will determine the destination paths in the Bag.
   $mime_detect = new MimeDetect();
   foreach ($islandora_object as $ds) {
     // Save each datastream to the temp directory, using the DSID as
-    // the filename..
+    // the filename.
     $extension = $mime_detect->getExtension($ds->mimetype);
-    $ds_content_file_path = $tmp_ds_directory . '/' . $ds->id . '.' . $extension;
+    $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . $extension;
     $ds->getContent($ds_content_file_path);
   }
 
@@ -254,7 +254,7 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-') . $pid;
-  $bag_output_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') . '/' .
+  $bag_output_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') . DIRECTORY_SEPARATOR .
     $bag_file_name;
 
   // Because the BagItPHP library does some things by default if the bag output
@@ -266,38 +266,41 @@ function islandora_bagit_create_bag($islandora_object) {
 
   /*
    Plugins in the islandora_bagit module can be of two types, 1) datastream copy and
-   2) file addition. Copy plugins copy the datastream files into a directory structure
-   under $bag_output_path, and file addition plugins create files that are not
-   datastreams.
+   2) file addition. Copy plugins copy the datastream files from $tmp_ds_directory into
+   a directory structure under $bag_output_path, and file addition plugins create files 
+   in $tmp_ds_directory that are not datastreams.
   */
 
   // A list of all the files added to the bag, to show the user and add to
-  // watchdog.
+  // the watchdog entries.
   $all_added_files = array();
 
   // Create a new bag.
   $bag = new BagIt($bag_output_path, TRUE, TRUE, TRUE);
 
-  // Iterate through all the plugins. Each plugin must return the paramters
-  // required for addFile() or FALSE if it doesn't want to create a file.
-  $plugins = islandora_bagit_get_plugins();
+  // Iterate through all the plugins. Each datastream copy plugin must return the 
+  // parameters required for addFile() or FALSE if it doesn't want to create a file.
+  $plugins = variable_get('islandora_bagit_plugins', array(''));
   if (count($plugins)) {
-    foreach ($plugins as $plugin) {
-      module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
-      $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
-      // Process the copy and add plugins.
-      if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
-        foreach ($files_to_add as $file) {
-          $bag->addFile($file['path'], $file['name']);
-          $all_added_files[] = $file['path'];
+    foreach ($plugins as $plugin => $enabled) {
+      if ($enabled) {
+        module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
+        $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
+        // Process the copy and add plugins. Copy plugins return a list of file source
+        // and destination paths; add file plugins return FALSE.
+        if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
+          foreach ($files_to_add as $file) {
+            $bag->addFile($file['source'], $file['dest']);
+            $all_added_files[] = $file['dest'];
+          }
+          $bag->update();
         }
-        $bag->update();
-      }
 
-      // Generate octetstream sum.
-      // if (variable_get('bagit_payload_octetstream_sum', 1)) {
-      //   bagit_get_octetstream_sum($all_added_files);
-      // }
+        // Generate octetstream sum.
+        // if (variable_get('bagit_payload_octetstream_sum', 1)) {
+        //   bagit_get_octetstream_sum($all_added_files);
+        // }
+      }
     }
   }
   else {
@@ -320,7 +323,7 @@ function islandora_bagit_create_bag($islandora_object) {
 
   // Write out the serialized (i.e., compressed) Bag.
   $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
-    '/' . $bag_file_name;
+    DIRECTORY_SEPARATOR . $bag_file_name;
   $compression_type = variable_get('islandora_bagit_compression_type', 'tgz');
   $bag->package($serialized_bag_path, $compression_type); 
 
@@ -329,7 +332,7 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   // Delete the temp directory created by file create plugins, if it exists.
-  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . '/' . $pid;
+  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . DIRECTORY_SEPARATOR . $pid;
   if (file_exists($bag_tmp_dir)) {
     rrmdir($bag_tmp_dir);
   }
@@ -387,6 +390,23 @@ function islandora_bagit_get_plugins() {
 }
 
 /**
+ * Utility function for plugins. Gets list of files in the Bag's temporary
+ * directory.
+ *
+ * param $dir string
+ *  The temporary directory where the datastream files have been downloaded
+ * (may also include files created by add file plugins).
+ */
+function islandora_bagit_get_ds_files($dir) {
+ // Get the directory listing for $tmp_ds_directory.
+  $files = scandir($dir);
+  // Get rid of the . and .. entries.
+  unset($files[0]);
+  unset($files[1]);
+  return $files;
+}
+
+/**
  * Implementation of hook_action_info().
  */
 function islandora_bagit_action_info() {
@@ -405,27 +425,13 @@ function islandora_bagit_action_info() {
 }
 
 /**
- * Utility function to get list of fields that are of 'file' or 'image' type.
- * 
- * @todo: This is only called from the remaining plugins, remove it when we replace them.
- */
-function islandora_bagit_get_fields_fileimage() {
-  $fields = array();
-  $result = db_query("SELECT field_name FROM {field_config} WHERE type = 'file' OR type = 'image'");
-  foreach ($result as $row) {
-    $fields[] = $row->field_name;
-  }
-  return $fields;
-}
-
-/**
  * Implementation of hook_file_dowload().
  */
 function islandora_bagit_file_download($uri) {
   // Get the file's name.
   $file_name = basename($uri);
   // Get the file's size.
-  $path = variable_get('islandora_bagit_bag_output_dir', '') . '/' . $file_name;
+  $path = variable_get('islandora_bagit_bag_output_dir', '') . DIRECTORY_SEPARATOR . $file_name;
   // If the file is in the Bag output directory, this module controls
   // access to it; if it's not, this module doesn't control access to
   // it so we return NULL.
