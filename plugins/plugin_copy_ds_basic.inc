@@ -10,7 +10,7 @@
  * Returns an array of file paths and names. Returns FALSE if no file are
  * present or if FileField is not enabled.
  */
-function islandora_bagit_plugin_base_init($islandora_object, $tmp_ds_directory) {
+function islandora_bagit_plugin_copy_ds_basic_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
 
   // Get the directory listing for $tmp_ds_directory.
@@ -24,7 +24,6 @@ function islandora_bagit_plugin_base_init($islandora_object, $tmp_ds_directory) 
     $files_to_add[] = array(
       'path' => $tmp_ds_directory . '/' . $ds_filename,
       'name' => $ds_filename,
-      'extra' => array(),
     );
   }
 

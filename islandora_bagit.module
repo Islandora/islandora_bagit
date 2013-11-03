@@ -41,9 +41,9 @@ function islandora_bagit_menu() {
     'page callback' => 'islandora_bagit_create_bag',
     // 'page callback' => 'islandora_fits_metadata_display',
     'page arguments' => array(2),
-    'access callback' => 'islandora_bagit_access_check',
+    // 'access callback' => 'islandora_bagit_access_check',
     // 'access callback' => 'islandora_fits_metadata_access',
-    'access arguments' => array(2),
+    'access arguments' => array('create Islandora Bags'),
     'type' => MENU_LOCAL_TASK,
   );
   return $items;
@@ -133,7 +133,7 @@ function islandora_bagit_admin_settings() {
     '#description' => t('Check this option if you want to log the
       creation of Bags to the Drupal watchdog.'),
   );
- $form['islandora_bagit_compression_type'] = array(
+  $form['islandora_bagit_compression_type'] = array(
     '#type' => 'select',
     '#title' => t('Compression type'),
     '#default_value' => variable_get('islandora_bagit_compression_type', 'tgz'),
@@ -144,16 +144,16 @@ function islandora_bagit_admin_settings() {
     '#description' => t('The compression used on serialized Bags.'),
   );
 
-  $content_types = node_type_get_names();
-  foreach ($content_types as $type => $name) {
-    $type_options[$type] = $name;
+  $plugins = islandora_bagit_get_plugins();
+  foreach ($plugins as $plugin) {
+    $plugin_options[$plugin] = $plugin;
   }
-  $form['islandora_bagit_content_types'] = array(
-    '#title' => t('Content types'),
+  $form['islandora_bagit_plugins'] = array(
+    '#title' => t('Plugins'),
     '#type' => 'checkboxes',
-    '#options' => $type_options,
-    '#default_value' => variable_get('islandora_bagit_content_types', array('')),
-    '#description' => t('Content types that can be exported as Bags.'),
+    '#options' => $plugin_options,
+    '#default_value' => variable_get('islandora_bagit_plugins', array('')),
+    '#description' => t('Plugins are fired in their order in this list.'),
   );
 
   $form['islandora_bagit_baginfo_settings'] = array(
@@ -224,31 +224,9 @@ function islandora_bagit_admin_settings() {
 }
 
 /**
- * Custom menu access callback. Checks node type and user privileges. If the
- * current node's content type is not enabled for BagIt export, the BagIt tab
- * should not show up.
- */
-function islandora_bagit_access_check($object) {
-  // First, check the user's privileges.
-  if (!user_access('create Islandora Bags')) {
-    return FALSE;
-  }
-  if (islandora_bagit_check_node_type($object)) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
-}
-
-/**
  * Creates the Bag.
  */
 function islandora_bagit_create_bag($islandora_object) {
-  // if (!islandora_bagit_check_node_type($node->type)) {
-    // return FALSE;
-  // }
-
   $pid = str_replace(':', '_', $islandora_object->id);
 
   // Save all the datastreams to a temporary directory so they can be added to the Bag.
@@ -287,9 +265,9 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   /*
-   Plugins in the islandora_bagit module can be of two types, datastream copy and
-   file creation. Copy plugins copy the datastream files into a directory structure
-   under $bag_output_path, and file creation plugins create files that are not
+   Plugins in the islandora_bagit module can be of two types, 1) datastream copy and
+   2) file addition. Copy plugins copy the datastream files into a directory structure
+   under $bag_output_path, and file addition plugins create files that are not
    datastreams.
   */
 
@@ -300,29 +278,20 @@ function islandora_bagit_create_bag($islandora_object) {
   // Create a new bag.
   $bag = new BagIt($bag_output_path, TRUE, TRUE, TRUE);
 
-/*
   // Iterate through all the plugins. Each plugin must return the paramters
   // required for addFile() or FALSE if it doesn't want to create a file.
   $plugins = islandora_bagit_get_plugins();
   if (count($plugins)) {
     foreach ($plugins as $plugin) {
       module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
-      $plugin_init_function = $plugin . '_init';
-      // Process the copy and create plugins.
-      if (preg_match('/^(islandora_bagit_plugin_copy_|islandora_bagit_plugin_create_)/', $plugin)) {
-        if ($files_to_add = $plugin_init_function($islandora_object)) {
-          // Allow modules that implement hook_bagit_filter_files() to filter out files to copy.
-          if (preg_match('/^islandora_bagit_plugin_copy_/', $plugin)) {
-            foreach (module_implements('islandora_bagit_filter_files') as $module) {
-              $files_to_add = module_invoke($module, 'islandora_bagit_filter_files', $plugin, $files_to_add, $islandora_object);
-            }
-          }
-          foreach ($files_to_add as $file) {
-            $bag->addFile($file['path'], $file['name']);
-            $all_added_files[] = $file['path'];
-          }
-          $bag->update();
+      $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
+      // Process the copy and add plugins.
+      if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
+        foreach ($files_to_add as $file) {
+          $bag->addFile($file['path'], $file['name']);
+          $all_added_files[] = $file['path'];
         }
+        $bag->update();
       }
 
       // Generate octetstream sum.
@@ -330,18 +299,6 @@ function islandora_bagit_create_bag($islandora_object) {
       //   bagit_get_octetstream_sum($all_added_files);
       // }
     }
-  }
-*/
-  // For now we only use the base plugin.
-  $plugin = 'islandora_bagit_plugin_base';
-  $plugin_init_function = $plugin . '_init';
-  module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
-  if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
-    foreach ($files_to_add as $file) {
-      $bag->addFile($file['path'], $file['name']);
-      $all_added_files[] = $file['path'];
-    }
-    $bag->update();
   }
   else {
     drupal_set_message(t('There are no files to add to the Bag.'), 'warning');
@@ -420,7 +377,9 @@ function islandora_bagit_create_bag($islandora_object) {
 function islandora_bagit_get_plugins() {
   $plugins = array();
   $module_dir = drupal_get_path('module', 'islandora_bagit');
-  $plugin_files = file_scan_directory($module_dir . '/plugins', '/islandora_bagit_plugin_.*\.inc$/');
+  // $plugin_files = file_scan_directory($module_dir . '/plugins', '/islandora_bagit_plugin_.*\.inc$/');
+  $plugin_files = file_scan_directory($module_dir . '/plugins', '/^plugin_.*\.inc$/');
+  sort($plugin_files);
   foreach ($plugin_files as $plugin) {
     $plugins[] = $plugin->name;
   }
@@ -446,35 +405,6 @@ function islandora_bagit_action_info() {
 }
 
 /**
- * Check whether the node type is in the list of content types
- * allowed to have Bags created for them.
- */
-function islandora_bagit_check_node_type($object) {
-  if (isset($object['OBJ'])) { // @todo: Figure out if we want to do this type of check, maybe on content model.
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
-/*
-  // Get the content types that the site admin has enabled for BagIt output.
-  $allowed_types = array();
-  foreach (variable_get('islandora_bagit_content_types', array()) as $key => $value) {
-    if ($value) {
-      $allowed_types[] = $key;
-    }
-  }
-  // Then check current node's content type against the allowed list.
-  if (in_array($node_type, $allowed_types)) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
-*/
-}
-
-/**
  * Utility function to get list of fields that are of 'file' or 'image' type.
  * 
  * @todo: This is only called from the remaining plugins, remove it when we replace them.
@@ -486,32 +416,6 @@ function islandora_bagit_get_fields_fileimage() {
     $fields[] = $row->field_name;
   }
   return $fields;
-}
-
-/**
- * Utility function to allow plugins to build an associative array of extra information
- * about the files they are managing. $raw_extras is an array of data that will be
- * converted into an associative array containing key => value pairs of data that can
- * be passed to hooks, etc. from plugins.
- *
- * @todo: This is only called from the remaining plugins, remove it when we replace them.
- */
-function islandora_bagit_build_file_extra($raw_extras) {
-  $extra = array();
-  foreach ($raw_extras as $raw) {
-    if (is_object($raw)) {
-      $properties = get_object_vars($raw);
-      foreach ($properties as $property_key => $property_value) {
-        $extra[$property_key] = $property_value;
-      }
-    }
-    if (is_array($raw)) {
-      foreach ($raw as $array_key => $array_value) {
-        $extra[$array_key] = $array_value;
-      }
-    }
-  }
-  return $extra;
 }
 
 /**

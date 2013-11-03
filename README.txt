@@ -45,7 +45,7 @@ three types of plugins:
 
 1) file creation plugins
 2) file copy plugins
-3) file fetch plugins
+// 3) file fetch plugins
 
 If you need to create a specific representation of the node to add to the Bag,
 or if you have other requirements not covered by the supplied plugins, you can
@@ -72,9 +72,7 @@ e) Plugins return FALSE if there is an error in copying or writing files,
 Modifying a Bag from your own modules
 =====================================
 
-This module provides two hooks that let other modules modify Bags.
-
-The first is drupal_alter(), which allows other modules to use
+This module provides a drupal_alter() hook, which allows other modules to use
 hook_bagit_alter($bag, $node). Your module can modify the current Bag using any
 of the methods provided by the BagItPHP library. Each implementation of this
 hook must take $bag and $node as parameters; $node is provided so you can use
@@ -101,44 +99,6 @@ function mymodule_bagit_alter($bag, $node) {
 
 Note that implementations of hook_bagit_alter() must call $bag->update()
 themselves, typically at the very end of the function.
-
-The second is hook_bagit_filter_files(), which allows modules to control
-which files copy plugins add to the Bag (hook_bagit_alter() doesn't let
-you do this). Parameters are $plugin_name, $files, and $node; implementations
-must return the modified $files array. As with hook_bagit_alter(), $node is
-provided so you can use access properties of the node in your module.
-An example implentation of this hook is:
-
-/**
- * Implementation of hook_bagit_filter_files().
- *
- * @param $plugin_name
- *   The name of the copy plugin that is generating the $files list.
- *
- * @param $files
- *  An array containing the files manged by the copy plugin.
- *
- * @param $node
- *  The current node.
- *
- * @return
- *  The modified $files array.
- */
-function mymodule_bagit_filter_files($plugin_name, $files, $node) {
-  if ($plugin_name == 'bagit_plugin_copy_filefield') {
-    foreach ($files as $index => $file_info) {
-      // Check for files managed in a specific field.
-      if ($file_info['extra']['field'] == 'field_foo') {
-        unset($files[$index]);
-      }
-      // Check to see if a file is from a specific directory.
-      if (preg_match('/unwantedfiles/', $file_info['path'])) {
-        unset($files[$index]);
-      }
-    }
-  }
-  return $files;
-}
 
 Permissions and security
 ========================
