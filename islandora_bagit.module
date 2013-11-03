@@ -106,19 +106,8 @@ function islandora_bagit_admin_settings() {
       serialized Bags' is accessible via the web."),
   );
 
-  if (module_exists('token')) {
-    $token_help = t('Available replacement tokens include [site:name], [site:url],
-      [user:name], [site:login-url], [node:nid], [node:title], [node:url], [node:summary].');
-    $description =  t("Base name for the Bags. The node's nid is appended to this value,
-      unless you use the Token module to create a different name pattern. Available
-      replacement tokens are: [site:name], [site:url], [user:name], [node:nid],
-      [node:title], [node:url].");
-    $default_bag_name = variable_get('islandora_bagit_bag_name', 'Islandora-Bag-[node:nid]');
-  }
-  else {
-    $description =  t("Base name for the Bags. The node's nid is appended to this value.");
-    $default_bag_name = variable_get('islandora_bagit_bag_name', 'Bag-');
-  }
+  $description =  t("Base name for the Bags. The object's PID is appended to this value.");
+  $default_bag_name = variable_get('islandora_bagit_bag_name', 'Bag-');
   $form['islandora_bagit_bag_name'] = array(
     '#title' => t('Bag name'),
     '#type' => 'textfield',
@@ -255,9 +244,29 @@ function islandora_bagit_access_check($object) {
 /**
  * Creates the Bag.
  */
-function islandora_bagit_create_bag($node) {
-  if (!islandora_bagit_check_node_type($node->type)) {
-    return FALSE;
+function islandora_bagit_create_bag($islandora_object) {
+  // if (!islandora_bagit_check_node_type($node->type)) {
+    // return FALSE;
+  // }
+
+  $pid = str_replace(':', '_', $islandora_object->id);
+
+  // Save all the datastreams to a temporary directory so they can be added to the Bag.
+  // We delete these files after creating the Bag.
+  $random_string = substr(md5(rand()),0,7);
+  $tmp_ds_directory = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . 
+    '/islandora_bagit_tmp/' . $random_string;
+  if (!file_exists($tmp_ds_directory)) {
+    mkdir($tmp_ds_directory, 0777, TRUE);
+  }
+  
+  $mime_detect = new MimeDetect();
+  foreach ($islandora_object as $ds) {
+    // Save each datastream to the temp directory, using the DSID as
+    // the filename..
+    $extension = $mime_detect->getExtension($ds->mimetype);
+    $ds_content_file_path = $tmp_ds_directory . '/' . $ds->id . '.' . $extension;
+    $ds->getContent($ds_content_file_path);
   }
 
   // Load the BagItPHP library.
@@ -266,14 +275,7 @@ function islandora_bagit_create_bag($node) {
     require_once($bagit_library_path . '/lib/bagit.php');
   }
 
-  // Set up the Bag filename and the output directory.
-  if (module_exists('token')) {
-    $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-[node:nid]');
-    $bag_file_name = token_replace($bag_file_name, array('node' => $node));
-  }
-  else {
-    $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-') . $node->nid;
-  }
+  $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-') . $pid;
   $bag_output_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') . '/' .
     $bag_file_name;
 
@@ -284,6 +286,13 @@ function islandora_bagit_create_bag($node) {
     rrmdir($bag_output_path);
   }
 
+  /*
+   Plugins in the islandora_bagit module can be of two types, datastream copy and
+   file creation. Copy plugins copy the datastream files into a directory structure
+   under $bag_output_path, and file creation plugins create files that are not
+   datastreams.
+  */
+
   // A list of all the files added to the bag, to show the user and add to
   // watchdog.
   $all_added_files = array();
@@ -291,6 +300,7 @@ function islandora_bagit_create_bag($node) {
   // Create a new bag.
   $bag = new BagIt($bag_output_path, TRUE, TRUE, TRUE);
 
+/*
   // Iterate through all the plugins. Each plugin must return the paramters
   // required for addFile() or FALSE if it doesn't want to create a file.
   $plugins = islandora_bagit_get_plugins();
@@ -300,11 +310,11 @@ function islandora_bagit_create_bag($node) {
       $plugin_init_function = $plugin . '_init';
       // Process the copy and create plugins.
       if (preg_match('/^(islandora_bagit_plugin_copy_|islandora_bagit_plugin_create_)/', $plugin)) {
-        if ($files_to_add = $plugin_init_function($node)) {
+        if ($files_to_add = $plugin_init_function($islandora_object)) {
           // Allow modules that implement hook_bagit_filter_files() to filter out files to copy.
           if (preg_match('/^islandora_bagit_plugin_copy_/', $plugin)) {
             foreach (module_implements('islandora_bagit_filter_files') as $module) {
-              $files_to_add = module_invoke($module, 'islandora_bagit_filter_files', $plugin, $files_to_add, $node);
+              $files_to_add = module_invoke($module, 'islandora_bagit_filter_files', $plugin, $files_to_add, $islandora_object);
             }
           }
           foreach ($files_to_add as $file) {
@@ -319,23 +329,24 @@ function islandora_bagit_create_bag($node) {
       // if (variable_get('bagit_payload_octetstream_sum', 1)) {
       //   bagit_get_octetstream_sum($all_added_files);
       // }
-
-      // Process the fetch plugins.
-      if (preg_match('/^islandora_bagit_plugin_fetch_/', $plugin)) {
-        if ($urls_to_add = $plugin_init_function($node)) {
-          foreach ($urls_to_add as $file) {
-            $bag->fetch->add($file['url'], $file['name']);
-            $all_added_files[] = $file['url'];
-          }
-          $bag->update();
-        }
-      }
     }
+  }
+*/
+  // For now we only use the base plugin.
+  $plugin = 'islandora_bagit_plugin_base';
+  $plugin_init_function = $plugin . '_init';
+  module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
+  if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
+    foreach ($files_to_add as $file) {
+      $bag->addFile($file['path'], $file['name']);
+      $all_added_files[] = $file['path'];
+    }
+    $bag->update();
   }
   else {
     drupal_set_message(t('There are no files to add to the Bag.'), 'warning');
-    watchdog('bagit', 'BagIt Bag not created for node !nid: plugins found no files.',
-      WATCHDOG_WARNING, array('!nid' => $node->nid));
+    watchdog('bagit', 'BagIt Bag not created for !object: plugins found no files.',
+      WATCHDOG_WARNING, array('!object' => $islandora_object->id));
     return '';
   }
 
@@ -348,7 +359,7 @@ function islandora_bagit_create_bag($node) {
   // Allow other modules to modify the Bag using mymodule_bagit_alter($bag, $node).
   // @todo: Determine how implementations of this hook can overwrite bag-info.txt values
   // (e.g., if they add a file, Octetstream sum will need to be modified.
-  drupal_alter('islandora_bagit', $bag, $node);
+  // drupal_alter('islandora_bagit', $bag, $node);
 
   // Write out the serialized (i.e., compressed) Bag.
   $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
@@ -361,15 +372,20 @@ function islandora_bagit_create_bag($node) {
   }
 
   // Delete the temp directory created by file create plugins, if it exists.
-  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . '/' . $node->nid;
+  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . '/' . $pid;
   if (file_exists($bag_tmp_dir)) {
     rrmdir($bag_tmp_dir);
+  }
+
+  // Clean up the temp director where we downloaded the datastreams.
+  if (file_exists($tmp_ds_directory)) {
+    rrmdir($tmp_ds_directory);
   }
 
   $serialized_all_added_files = implode(', ', $all_added_files);
   if (variable_get('islandora_bagit_log_bag_creation', 1)) {
     watchdog('islandora_bagit', 'BagIt Bag created for node !nid (!files).',
-      array('!nid' => $node->nid, '!files' => $serialized_all_added_files));
+      array('!pid' => $islandora_object->id, '!files' => $serialized_all_added_files));
   }
 
   $serialized_bag_path .=  '.' . $compression_type;
@@ -434,7 +450,7 @@ function islandora_bagit_action_info() {
  * allowed to have Bags created for them.
  */
 function islandora_bagit_check_node_type($object) {
-  if (isset($object['OBJ'])) {
+  if (isset($object['OBJ'])) { // @todo: Figure out if we want to do this type of check, maybe on content model.
     return TRUE;
   }
   else {
@@ -460,6 +476,8 @@ function islandora_bagit_check_node_type($object) {
 
 /**
  * Utility function to get list of fields that are of 'file' or 'image' type.
+ * 
+ * @todo: This is only called from the remaining plugins, remove it when we replace them.
  */
 function islandora_bagit_get_fields_fileimage() {
   $fields = array();
@@ -475,6 +493,8 @@ function islandora_bagit_get_fields_fileimage() {
  * about the files they are managing. $raw_extras is an array of data that will be
  * converted into an associative array containing key => value pairs of data that can
  * be passed to hooks, etc. from plugins.
+ *
+ * @todo: This is only called from the remaining plugins, remove it when we replace them.
  */
 function islandora_bagit_build_file_extra($raw_extras) {
   $extra = array();
