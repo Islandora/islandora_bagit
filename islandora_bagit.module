@@ -9,7 +9,6 @@
  * @todo:
  * -Add logic to create batches of Bags from collections.
  * -Make single-item Bag creation and batch creation work from Drush.
- * -Add islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object['OBJ']) to plugins.
  */
 
 /**
@@ -244,11 +243,13 @@ function islandora_bagit_create_bag($islandora_object) {
   // files. Plugins will determine the destination paths in the Bag.
   $mime_detect = new MimeDetect();
   foreach ($islandora_object as $ds) {
-    // Save each datastream to the temp directory, using the DSID as
-    // the filename.
-    $extension = $mime_detect->getExtension($ds->mimetype);
-    $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . $extension;
-    $ds->getContent($ds_content_file_path);
+    if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
+      // Save each datastream to the temp directory, using the DSID as
+      // the filename.
+      $extension = $mime_detect->getExtension($ds->mimetype);
+      $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . $extension;
+      $ds->getContent($ds_content_file_path);
+    }
   }
 
   // Load the BagItPHP library.
