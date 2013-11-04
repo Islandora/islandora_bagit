@@ -410,24 +410,6 @@ function islandora_bagit_get_ds_files($dir) {
 }
 
 /**
- * Implementation of hook_action_info().
- */
-function islandora_bagit_action_info() {
-  // All actions are called with the $object and $context parameters. In the
-  // case of bagit_create_bag(), its first (and only) paramter is $node,
-  // which is a valid type of actions $object.
-  $info['islandora_bagit_create_bag'] = array(
-    'type' => 'node',
-    'label' => t('Generate Islandora Bags'),
-    'configurable' => FALSE,
-    'triggers' => array(
-      'node_view', 'node_insert', 'node_update', 'node_delete',
-     )
-  );
-  return $info;
-}
-
-/**
  * Implementation of hook_file_dowload().
  */
 function islandora_bagit_file_download($uri) {
