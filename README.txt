@@ -108,3 +108,8 @@ datastreams in Islandora objects.
 Author/maintainer
 =================
 Mark Jordan <mjordan at sfu dot ca>
+
+License
+=======
+Islandora BagIt is released under the GNU AFFERO GENERAL PUBLIC LICENSE, version 3.
+See LICENSE.txt for more information.
