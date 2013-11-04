@@ -154,7 +154,7 @@ function islandora_bagit_admin_settings() {
     '#type' => 'checkboxes',
     '#options' => $plugin_options,
     '#default_value' => variable_get('islandora_bagit_plugins', array('')),
-    '#description' => t("Plugins are fired in their order in this list. You should only choose one 'copy' plugin."),
+    '#description' => t("Plugins are fired in their order in this list. You should choose at least one plugin.") 
   );
 
   $form['islandora_bagit_baginfo_settings'] = array(
@@ -270,10 +270,9 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   /*
-   Plugins in the islandora_bagit module can be of two types, 1) datastream copy and
-   2) file addition. Copy plugins copy the datastream files from $tmp_ds_directory into
-   a directory structure under $bag_output_path, and file addition plugins create files 
-   in $tmp_ds_directory that are not datastreams.
+   Plugins in the Islandora Bagit module 1) define the source and destination paths for
+   datastream files and 2) optionally, rename datastream files or create new files for
+   inclusion in the Bag.
   */
 
   // A list of all the files added to the bag, to show the user and add to
@@ -291,8 +290,7 @@ function islandora_bagit_create_bag($islandora_object) {
       if ($enabled) {
         module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
         $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
-        // Process the copy and add plugins. Copy plugins return a list of file source
-        // and destination paths; add file plugins return FALSE.
+        // Process the plugins. Plugins return a list of file source and destination paths. 
         if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
           foreach ($files_to_add as $file) {
             $bag->addFile($file['source'], $file['dest']);

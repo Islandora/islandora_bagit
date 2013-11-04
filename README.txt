@@ -37,13 +37,12 @@ To install the Islandora BagIt module:
 7) Configure user permissions like you would for any other contrib module.
 
 Extending and customizing the BagIt module
-=========================================
+==========================================
 
-The files that are added to an Islandora object's Bag are managed by plugins. There
-are two types of plugins:
-
-1) file addition plugins
-2) datastream copy plugins
+The files that are added to an Islandora object's Bag are managed by plugins. Plugins
+1) define the source path for datastream files and their destination paths in the Bag
+relative to the Bag's 'data' directory, and 2) optionally, rename datastream files or
+create new files for inclusion in the Bag.
 
 The module comes with three plugins, one that copies all the datastreams in an
 Islandora object in the top level of the Bag's 'data' directory, one that creates
@@ -54,15 +53,13 @@ If you have requirements not covered by the supplied plugins, you can use the pl
 described above to base your own on. If you write your own plugins, follow these 
 guidelines:
 
-a) Begin plugin filenames with 'plugin_add' or 'plugin_copy_', depending on 
-   what type of plugin you are writing. Plugins must end in '.inc'.
+a) Begin plugin filenames with 'plugin_' and end in '.inc'.
 b) Every plugin has a function that is named the same as the filename
    prepended with 'islandora_bagit_', ending in '_init().' All init functions 
    take $islandora_object and $tmp_ds_directory parameters.
 c) Plugins must complete all file writing and copying tasks before they return
    the file's source and destination paths to the Bagit module (in the case of
-   datastream copy plugins) or return FALSE (in the case of file creation
-   plugins).
+   datastream copy plugins).
 d) Plugins return FALSE if there is an error in copying or writing files.
   
 
