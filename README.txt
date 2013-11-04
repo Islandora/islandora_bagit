@@ -42,7 +42,7 @@ Extending and customizing the BagIt module
 The files that are added to an Islandora object's Bag are managed by plugins. There
 are two types of plugins:
 
-1) file creation plugins
+1) file addition plugins
 2) datastream copy plugins
 
 The module comes with three plugins, one that copies all the datastreams in an

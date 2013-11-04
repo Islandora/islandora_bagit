@@ -21,12 +21,13 @@ function islandora_bagit_plugin_copy_archivematica_transfers_init($islandora_obj
   // Create a subdirectory in $tmp_ds_directory.
   mkdir($tmp_ds_directory . '/metadata', 0777, TRUE);
   mkdir($tmp_ds_directory . '/objects', 0777, TRUE);
-  // Move the DC and MODs datastreams into this subdirectory and add the
-  // new files to $files_to_add.
-  rename($tmp_ds_directory . '/DC.xml', $tmp_ds_directory . '/metadata/dublin_core.xml');
-  $files_to_add[] = array('source' => $tmp_ds_directory . '/metadata/dublin_core.xml', 
-    'dest' => 'metadata/dublin_core.xml');
+  // Move the DC datastream into this subdirectory and add the moved file to 
+  // $files_to_add.
+  rename($tmp_ds_directory . '/DC.xml', $tmp_ds_directory . '/metadata/dublincore.xml');
+  $files_to_add[] = array('source' => $tmp_ds_directory . '/metadata/dublincore.xml', 
+    'dest' => 'metadata/dublincore.xml');
 
+  // Loop through all the other files and move them into the 'objects' subdirectory.
   foreach ($ds_files as $ds_filename) {
     $ds_file = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds_filename;
     if (file_exists($ds_file) && is_file($ds_file)) {
