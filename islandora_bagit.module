@@ -8,7 +8,8 @@
  *
  * @todo:
  * -Add logic to create batches of Bags from collections.
- * -Made single-item Bag creation and batch creation work from Drush.
+ * -Make single-item Bag creation and batch creation work from Drush.
+ * -Add islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object['OBJ']) to plugins.
  */
 
 /**
@@ -228,8 +229,7 @@ function islandora_bagit_admin_settings() {
  * Creates the Bag.
  */
 function islandora_bagit_create_bag($islandora_object) {
-  $pid = str_replace(':', '_', $islandora_object->id);
-  // $pid = islandora_escape_pid_for_function($islandora_object->id);
+  $pid = str_replace(array(':','-'), '_', $islandora_object->id);
 
   // Save all the datastreams to a randomly named temporary directory so 
   // they can be added to the Bag. We delete these files after creating the Bag.
@@ -320,10 +320,10 @@ function islandora_bagit_create_bag($islandora_object) {
     $bag->setBagInfoData($tag, $value);
   }
 
-  // Allow other modules to modify the Bag using mymodule_bagit_alter($bag, $node).
+  // Allow other modules to modify the Bag using mymodule_bagit_alter($bag, $islandora_object).
   // @todo: Determine how implementations of this hook can overwrite bag-info.txt values
-  // (e.g., if they add a file, Octetstream sum will need to be modified.
-  // drupal_alter('islandora_bagit', $bag, $node);
+  // (e.g., if they add a file, Octetstream sum will need to be modified).
+  drupal_alter('islandora_bagit', $bag, $islandora_object);
 
   // Write out the serialized (i.e., compressed) Bag.
   $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
