@@ -1,5 +1,5 @@
-README.txt for the BagIt module.
-================================
+README.txt for the Islandora BagIt module
+=========================================
 
 Introduction
 ============
