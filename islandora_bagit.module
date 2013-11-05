@@ -207,6 +207,13 @@ function islandora_bagit_admin_settings() {
       position responsible. Leave blank to omit from bag-info.txt."),
     '#maxlength' => 255,
   );
+  $form['islandora_bagit_baginfo_settings']['islandora_bagit_profile_uri'] = array(
+    '#type' => 'textfield',
+    '#title' => t('BagIt profile URI'),
+    '#default_value' => variable_get('islandora_bagit_profile_uri', ''),
+    '#description' => t('See https://github.com/ruebot/bagit-profiles for more information. Note that Islandora BagIt does not validate Bags against profiles.'),
+    '#maxlength' => 255,
+  );
   $form['islandora_bagit_baginfo_settings']['islandora_bagit_bagging_date'] = array(
     '#type' => 'checkbox',
     '#title' => t('Bagging date'),
@@ -467,6 +474,9 @@ function islandora_bagit_create_baginfo() {
   }
   if (strlen(variable_get('islandora_bagit_contact_email', ''))) {
     $bag_info['Contact-Email'] = variable_get('islandora_bagit_contact_email', '');
+  }
+  if (strlen(variable_get('islandora_bagit_profile_uri', ''))) {
+    $bag_info['BagIt-Profile-Identifier'] = variable_get('islandora_bagit_profile_uri', '');
   }
   if (variable_get('islandora_bagit_bagging_date', 1)) {
     $bag_info['Bagging-Date'] = date("Y-m-d");
