@@ -84,7 +84,7 @@ typical implementation looks like this:
  */
 function mymodule_islandora_bagit_alter($bag, $islandora_object) {
   // Add some custom metadata to bag-info.txt.
-  $bag->bagInfoData['Some-Arbitrary-Field'] = 'Foo bar baz';
+  $bag->bagInfoData('Some-Arbitrary-Field', 'Foo bar baz');
   // Add a file that is not managed by a plugin.
   $bag->addFile('/path/to/file.txt', 'myfile.txt');
   // Update the Bag (this is required).
