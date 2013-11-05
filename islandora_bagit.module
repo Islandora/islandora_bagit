@@ -386,7 +386,6 @@ function islandora_bagit_create_bag($islandora_object) {
 function islandora_bagit_get_plugins() {
   $plugins = array();
   $module_dir = drupal_get_path('module', 'islandora_bagit');
-  // $plugin_files = file_scan_directory($module_dir . '/plugins', '/islandora_bagit_plugin_.*\.inc$/');
   $plugin_files = file_scan_directory($module_dir . '/plugins', '/^plugin_.*\.inc$/');
   sort($plugin_files);
   foreach ($plugin_files as $plugin) {
