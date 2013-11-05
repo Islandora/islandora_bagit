@@ -217,7 +217,7 @@ function islandora_bagit_admin_settings() {
   $form['islandora_bagit_baginfo_settings']['islandora_bagit_payload_octetstream_sum'] = array(
     '#type' => 'checkbox',
     '#title' => t('Octetstream sum'),
-    '#default_value' => variable_get(''),
+    '#default_value' => variable_get('islandora_bagit_payload_octetstream_sum', FALSE),
     '#description' => t('The "octetstream sum" of the payload.'),
   );
  
