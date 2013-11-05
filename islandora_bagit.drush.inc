@@ -45,7 +45,7 @@ function islandora_bagit_drush_command() {
 /**
  * Callback function for drush create-islandora-bag. 
  *
- * @param $pid
+ * @param string $pid
  *   The PID of the Islandora object to create a Bag for.
  */
 function drush_islandora_bagit_create_islandora_bag($pid = NULL) {
@@ -67,7 +67,7 @@ function drush_islandora_bagit_create_islandora_bag($pid = NULL) {
 /**
  * Includes Tuque files.
  *
- * @return Boolean
+ * @return bool
  *   TRUE if the API was included, FALSE otherwise.
  */
 function islandora_bagit_drush_include_tuque() {

@@ -234,6 +234,11 @@ function islandora_bagit_admin_settings() {
 
 /**
  * Creates the Bag.
+ *
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ *
+ * @return string or array
  */
 function islandora_bagit_create_bag($islandora_object) {
   $pid = str_replace(array(':','-'), '_', $islandora_object->id);
@@ -384,6 +389,11 @@ function islandora_bagit_create_bag($islandora_object) {
 /**
  * Custom menu access callback. Checks user privileges and whether
  * the object is a collection or item.
+
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ *
+ * @return bool
  */
 function islandora_bagit_access_check($islandora_object) {
   // First, check the user's privileges.
@@ -403,6 +413,8 @@ function islandora_bagit_access_check($islandora_object) {
 
 /**
  * Get list of plugin filenames.
+ *
+ * @return array
  */
 function islandora_bagit_get_plugins() {
   $plugins = array();
@@ -419,9 +431,11 @@ function islandora_bagit_get_plugins() {
  * Utility function for plugins. Gets list of files in the Bag's temporary
  * directory.
  *
- * param $dir string
+ * @param string $dir
  *  The temporary directory where the datastream files have been downloaded
  * (may also include files created by add file plugins).
+ *
+ * @return array
  */
 function islandora_bagit_get_ds_files($dir) {
  // Get the directory listing for $tmp_ds_directory.
@@ -462,6 +476,12 @@ function islandora_bagit_file_download($uri) {
 
 /**
  * Generates the value for the Payload-Oxum metadata tag.
+ *
+ * @param array $files
+ *   Associative array of file info (with 'source' and 'dest'
+ *   keys) returned by a plugins.
+ *
+ * @return string
  */
 function islandora_bagit_get_octetstream_sum($files) {
   $file_counter = 0;
@@ -476,6 +496,8 @@ function islandora_bagit_get_octetstream_sum($files) {
 /**
  * Adds metadata to the bag-info.txt metadata. Makes no attempt to wrap lines
  * at 79 characters, as recommended by the spec.
+ *
+ * @return array
  */
 function islandora_bagit_create_baginfo() {
   $bag_info = array();
