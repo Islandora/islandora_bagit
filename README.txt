@@ -67,7 +67,7 @@ Modifying a Bag from your own modules
 =====================================
 
 This module provides a drupal_alter() hook, which allows other modules to use
-hook_bagit_alter($bag, $islandora_object). Your module can modify the current
+hook_islandora_bagit_alter($bag, $islandora_object). Your module can modify the current
 Bag using any of the methods provided by the BagItPHP library. Each implementation
 of this hook must take $bag and $islandora_object as parameters; $islandora_object
 is provided so you can access properties of the object in your module easily. A
