@@ -324,8 +324,6 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   // Allow other modules to modify the Bag using mymodule_bagit_alter($bag, $islandora_object).
-  // @todo: Determine how implementations of this hook can overwrite bag-info.txt values
-  // (e.g., if they add a file, Octetstream sum will need to be modified).
   drupal_alter('islandora_bagit', $bag, $islandora_object);
 
   // Write out the serialized (i.e., compressed) Bag.
