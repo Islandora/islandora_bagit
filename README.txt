@@ -67,11 +67,11 @@ Modifying a Bag from your own modules
 =====================================
 
 This module provides a drupal_alter() hook, which allows other modules to use
-hook_bagit_alter($bag, $node). Your module can modify the current Bag using any
-of the methods provided by the BagItPHP library. Each implementation of this
-hook must take $bag and $islandora_object as parameters; $islandora_object is 
-provided so you can access properties of the node in your module easily. A typical 
-implementation looks like this:
+hook_bagit_alter($bag, $islandora_object). Your module can modify the current
+Bag using any of the methods provided by the BagItPHP library. Each implementation
+of this hook must take $bag and $islandora_object as parameters; $islandora_object
+is provided so you can access properties of the object in your module easily. A
+typical implementation looks like this:
 
 /**
  * Implementation of hook drupal_alter().
@@ -107,9 +107,11 @@ datastreams in Islandora objects.
 
 Author/maintainer
 =================
+
 Mark Jordan <mjordan at sfu dot ca>
 
 License
 =======
+
 Islandora BagIt is released under the GNU AFFERO GENERAL PUBLIC LICENSE, version 3.
 See LICENSE.txt for more information.
