@@ -7,6 +7,9 @@
  * Usage: drush --user=UID create-islandora-bag PID
  *   where UID is the user ID or user name of the fedoraAdmin user 
  *   (or equivalent) and PID is the PID of the Islandora object.
+ *
+ * @todo: Add logic to create Bags for all objects in a collection by
+ *   querying rindex to get all object PIDs and looping through them.
  */
 
 /**
@@ -49,16 +52,14 @@ function drush_islandora_bagit_create_islandora_bag($pid = NULL) {
   global $user;
   $fedora_url = variable_get('islandora_base_url', 'http://localhost:8000/fedora');
 
-  // Use Tuque to connect to Fedora repo and connect.
+  // Use Tuque to connect to Fedora repo.
   islandora_bagit_drush_include_tuque();
   $connection = new RepositoryConnection($fedora_url, $user->name, $user->pass);
   $connection->reuseConnection = TRUE;
-  $repository = new FedoraRepository(
-       new FedoraApi($connection),
-       new SimpleCache());
+  $repository = new FedoraRepository(new FedoraApi($connection), new SimpleCache());
 
-  // Invoke Bag creation function from islandora_bagit module.
-  if ($islandora_object = $repository->getObject($pid)) {
+  // Load object and invoke Bag creation function from islandora_bagit module.
+  if ($pid && ($islandora_object = $repository->getObject($pid))) {
     islandora_bagit_create_bag($islandora_object);
   }
 }
