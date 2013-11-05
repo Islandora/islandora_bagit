@@ -44,7 +44,8 @@ function islandora_bagit_menu() {
     'title' => 'Create Bag',
     'page callback' => 'islandora_bagit_create_bag',
     'page arguments' => array(2),
-    'access arguments' => array('create Islandora Bags'),
+    'access callback' => 'islandora_bagit_access_check',
+    'access arguments' => array(2),
     'type' => MENU_LOCAL_TASK,
   );
   return $items;
@@ -378,6 +379,26 @@ function islandora_bagit_create_bag($islandora_object) {
   else {
     return array();
   }
+}
+
+/**
+ * Custom menu access callback. Checks user privileges and whether
+ * the object is a collection or item.
+ */
+function islandora_bagit_access_check($islandora_object) {
+  // First, check the user's privileges.
+  if (!user_access('create Islandora Bags')) {
+    return FALSE;
+  }
+
+  // Then check whether the object is a collection (has a
+  // datastream with ID 'COLLECTION_POLICY') or not.
+  foreach ($islandora_object as $ds) {
+    if ($ds->id == 'COLLECTION_POLICY') {
+      return FALSE;
+    }
+  }
+  return TRUE;
 }
 
 /**
