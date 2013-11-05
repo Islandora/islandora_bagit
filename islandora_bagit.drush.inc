@@ -5,8 +5,8 @@
  * Drush integration file for the Islandora BagIt module.
  *
  * Usage: drush --user=UID create-islandora-bag PID
- *   where UID is the user ID of the fedoraAdmin user (or equivalent) and
- *   PID is the PID of the Islandora object.
+ *   where UID is the user ID or user name of the fedoraAdmin user 
+ *   (or equivalent) and PID is the PID of the Islandora object.
  */
 
 /**
@@ -27,10 +27,11 @@ function islandora_bagit_drush_command() {
   $items['create-islandora-bag'] = array(
     'description' => dt('Creates a Bag for an Islandora object.'),
     'arguments'   => array(
-      'arg1'    => dt('The PID for the object you want to create a Bag for.'),
+      'PID'    => dt('The PID for the object you want to create a Bag for.'),
     ),
     'examples' => array(
-      'Standard example' => 'drush --user=UID create-islandora-bag islandora:190',
+      'Standard example' => 'drush --user=fedoraAdmin create-islandora-bag islandora:190',
+      'Alias example' => 'drush --user=fedoraAdmin cib islandora:190',
     ),
     'aliases' => array('cib'),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
