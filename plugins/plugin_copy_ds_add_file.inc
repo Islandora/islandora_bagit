@@ -62,7 +62,7 @@ function islandora_bagit_plugin_copy_ds_add_file_init($islandora_object, $tmp_ds
 }
 
 /**
- * Uses XMLWriter to generate the METS XML.
+ * Uses XMLWriter to generate foo.xml.
  *
  * @param array $file_list
  *   List of datastream files.
