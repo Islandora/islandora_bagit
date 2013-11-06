@@ -6,9 +6,9 @@
  *
  * Usage: drush --user=UID create-islandora-bag [object|collection] PID
  *   where UID is the user ID or user name of the fedoraAdmin user 
- *   (or equivalent), 'object' or 'collection' indicates you want to create
- *   a Bag for a single object or a Bag for every member of a collection,
- *   and PID is the PID of the Islandora object.
+ *   (or equivalent), 'object' or 'collection' indicates whether you want to
+ *   create a Bag for a single object or a Bag for every member of a
+ *   collection, and PID is the PID of the Islandora object.
  */
 
 /**
