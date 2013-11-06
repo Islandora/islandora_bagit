@@ -389,7 +389,7 @@ function islandora_bagit_create_bag($islandora_object) {
 /**
  * Custom menu access callback. Checks user privileges and whether
  * the object is a collection or item.
-
+ *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
  *

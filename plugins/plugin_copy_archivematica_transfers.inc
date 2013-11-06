@@ -13,6 +13,15 @@
 /**
  * Returns an array of source and destination file paths. Returns FALSE if no 
  * datastream files are present.
+ *
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ *
+ * @param string $tmp_ds_directory
+ *  The temporary directory where the datastream files have been downloaded.
+ *
+ * @return array or bool
+ *
  */
 function islandora_bagit_plugin_copy_archivematica_transfers_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
