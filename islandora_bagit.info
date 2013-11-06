@@ -3,4 +3,5 @@ description = Creats BagIt Bags from Islandora objects.
 core = 7.x
 package = Islandora Tools
 dependencies[] = libraries
+dependencies[] = islandora
 configure = admin/islandora/bagit
