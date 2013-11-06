@@ -97,6 +97,19 @@ function mymodule_islandora_bagit_alter($bag, $islandora_object) {
 Note that implementations of hook_islandora_bagit_alter() must call
 $bag->update() themselves, typically at the very end of the function.
 
+Drush integration
+=================
+
+Bags can be created for individual Islandora objects or for all objects
+in a given collection using Drush:
+
+  drush --user=UID create-islandora-bag [object|collection] PID
+
+where UID is the user ID or user name of the fedoraAdmin user (or equivalent),
+'object' or 'collection' indicates whether you want to create a Bag for a single
+object or a Bag for every member of a collection, and PID is the PID of the Islandora
+object or collection.
+
 Permissions and security
 ========================
 
