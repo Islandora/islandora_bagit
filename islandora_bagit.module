@@ -72,7 +72,7 @@ function islandora_bagit_admin_settings() {
     '#size' => 60,
     '#default_value' => variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()),
     '#description' => t("Filesystem directory where the unserialized Bag
-      directories are written, named by node ID. Needs to exist and to be
+      directories are written, named by PID. Needs to exist and to be
       writable by the web server. Do not include the trailing slash."),
     '#maxlength' => 255,
     '#required' => TRUE,
@@ -93,7 +93,7 @@ function islandora_bagit_admin_settings() {
     '#size' => 60,
     '#default_value' => variable_get('islandora_bagit_bag_output_dir', $bagit_output_dir),
     '#description' => t("Filesystem directory where serialized (.tgz or .zip) Bags
-      are written, named by node ID. Needs to exist and to be writable by the web
+      are written, named by PID. Needs to exist and to be writable by the web
       server. Do not include the trailing slash. If you want users to be able to
       download the Bags, this directory needs to be below your site's file system directory."),
     '#maxlength' => 255,
@@ -356,7 +356,7 @@ function islandora_bagit_create_bag($islandora_object) {
 
   $serialized_all_added_files = implode(', ', $all_added_files);
   if (variable_get('islandora_bagit_log_bag_creation', 1)) {
-    watchdog('islandora_bagit', 'BagIt Bag created for node !nid (!files).',
+    watchdog('islandora_bagit', 'BagIt Bag created for PID !pid (!files).',
       array('!pid' => $islandora_object->id, '!files' => $serialized_all_added_files));
   }
 
