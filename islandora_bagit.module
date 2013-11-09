@@ -155,7 +155,7 @@ function islandora_bagit_admin_settings() {
     '#type' => 'checkboxes',
     '#options' => $plugin_options,
     '#default_value' => variable_get('islandora_bagit_plugins', array('')),
-    '#description' => t("Plugins are fired in their order in this list. You should choose at least one plugin.") 
+    '#description' => t("Plugins are fired in their order in this list and all add files to the same Bag. You should choose at least one plugin.") 
   );
 
   $form['islandora_bagit_baginfo_settings'] = array(

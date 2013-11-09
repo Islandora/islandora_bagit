@@ -44,10 +44,15 @@ The files that are added to an Islandora object's Bag are managed by plugins. Pl
 relative to the Bag's 'data' directory, and 2) optionally, rename datastream files or
 create new files for inclusion in the Bag.
 
-The module comes with three plugins, one that copies all the datastreams in an
+The module comes with four plugins, one that copies all the datastreams in an
 Islandora object in the top level of the Bag's 'data' directory, one that creates
-an Archivematica (http://archivematica.org) transfer Bag, and one that illustrates
-how to create an additional file to add to the Bag.
+an Archivematica (http://archivematica.org) transfer Bag, one that illustrates
+how to create an additional file to add to the Bag, and one that exports the FOXML
+for an Islandora object.
+
+Multiple plugins may be activated, but they all add files to the same Bag. This means
+that unless the active plugins add distinct files to the Bag, you should activate
+only one plugin. 
 
 If you have requirements not covered by the supplied plugins, you can use the plugins 
 described above to base your own on. If you write your own plugins, follow these 

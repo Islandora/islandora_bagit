@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Plugin for the Islandora BagIt Drupal module.
+ *
+ * Exports the FOXML for an Islandora object and registers it with the
+ * Bag so it is copied into the 'data' directory.
+ *
+ * See https://wiki.duraspace.org/display/FEDORA35/REST+API#RESTAPI-export
+ * for possible values of 'format' and 'context' parameters in the call to
+ * the FedoraCommons API 'export' method.
+ */
+
+/**
+ * Returns an array of source and destination file paths. Returns FALSE if no 
+ * datastream files are present.
+ *
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ *
+ * @param string $tmp_ds_directory
+ *  The temporary directory where the datastream files have been downloaded.
+ *
+ * @return array or bool
+ */
+function islandora_bagit_plugin_copy_foxml_init($islandora_object, $tmp_ds_directory) {
+  $files_to_add = array();
+
+  // Use the Tuque API-M to export the FOXML for the object.
+  global $user;
+  $fedora_url = variable_get('islandora_base_url', 'http://localhost:8080/fedora');
+  $connection = islandora_get_tuque_connection($user, $fedora_url);
+  $foxml = $connection->api->m->export($islandora_object->id,
+    array('format' => 'info:fedora/fedora-system:FOXML-1.1',
+      'context' => 'archive',
+      'encoding' => 'UTF-8')
+    );
+
+  $foxml_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . 'foxml.xml';
+  file_put_contents($foxml_path, $foxml);
+  $files_to_add[] = array(
+    'source' => $foxml_path,
+    'dest' => 'foxml.xml',
+  );
+
+  if (count($files_to_add)) {
+    return $files_to_add;
+  }
+  else {
+    return FALSE;
+  }
+}
