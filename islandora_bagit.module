@@ -260,7 +260,8 @@ function islandora_bagit_create_bag($islandora_object) {
       // Save each datastream to the temp directory, using the DSID as
       // the filename.
       $extension = $mime_detect->getExtension($ds->mimetype);
-      $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . $extension;
+      $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
+        $extension;
       $ds->getContent($ds_content_file_path);
     }
   }
@@ -282,12 +283,6 @@ function islandora_bagit_create_bag($islandora_object) {
     rrmdir($bag_output_path);
   }
 
-  /*
-   Plugins in the Islandora Bagit module 1) define the source and destination paths for
-   datastream files and 2) optionally, rename datastream files or create new files for
-   inclusion in the Bag.
-  */
-
   // A list of all the files added to the bag, to show the user and add to
   // the watchdog entries.
   $all_added_files = array();
@@ -295,8 +290,8 @@ function islandora_bagit_create_bag($islandora_object) {
   // Get bag-info.txt metadata. 
   $bag_info = islandora_bagit_create_baginfo();
 
-  // Create a new bag.
-  $bag = new BagIt($bag_output_path, TRUE, TRUE, TRUE, $bag_info);
+  // Create a new bag. 
+  $bag = new BagIt($bag_output_path, TRUE, TRUE, FALSE, $bag_info);
 
   // Iterate through all the plugins. Each datastream copy plugin must return the 
   // parameters required for addFile() or FALSE if it doesn't want to create a file.
@@ -344,7 +339,8 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   // Delete the temp directory created by file create plugins, if it exists.
-  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . DIRECTORY_SEPARATOR . $pid;
+  $bag_tmp_dir = variable_get('islandora_bagit_bag_tmp_dir', file_directory_temp()) . 
+    DIRECTORY_SEPARATOR . $pid;
   if (file_exists($bag_tmp_dir)) {
     rrmdir($bag_tmp_dir);
   }
@@ -453,7 +449,8 @@ function islandora_bagit_file_download($uri) {
   // Get the file's name.
   $file_name = basename($uri);
   // Get the file's size.
-  $path = variable_get('islandora_bagit_bag_output_dir', '') . DIRECTORY_SEPARATOR . $file_name;
+  $path = variable_get('islandora_bagit_bag_output_dir', '') . DIRECTORY_SEPARATOR . 
+    $file_name;
   // If the file is in the Bag output directory, this module controls
   // access to it; if it's not, this module doesn't control access to
   // it so we return NULL.
