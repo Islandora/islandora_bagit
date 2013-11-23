@@ -251,20 +251,6 @@ function islandora_bagit_create_bag($islandora_object) {
   if (!file_exists($tmp_ds_directory)) {
     mkdir($tmp_ds_directory, 0777, TRUE);
   }
- 
-  // Iterate through the Islandora object and save all datastreams as
-  // files. Plugins will determine the destination paths in the Bag.
-  $mime_detect = new MimeDetect();
-  foreach ($islandora_object as $ds) {
-    if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
-      // Save each datastream to the temp directory, using the DSID as
-      // the filename.
-      $extension = $mime_detect->getExtension($ds->mimetype);
-      $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
-        $extension;
-      $ds->getContent($ds_content_file_path);
-    }
-  }
 
   // Load the BagItPHP library.
   $bagit_library_dir = variable_get('islandora_bagit_library_dir', 'BagItPHP');
@@ -421,6 +407,35 @@ function islandora_bagit_get_plugins() {
     $plugins[] = $plugin->name;
   }
   return $plugins;
+}
+
+/**
+ * Utility function for plugins. Iterates through the Islandora object and
+ * saves specified datastreams as files. 
+ *
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ * 
+ * @param array $datastreams
+ *   List of DSIDs to retrieve. If empty, retrieve all datastreams.
+ */
+function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory, $datastreams = array()) {
+  $mime_detect = new MimeDetect();
+  foreach ($islandora_object as $ds) {
+    if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
+      // Save each datastream to the temp directory, using the DSID as
+      // the filename.
+      // If $datastreams is empty, retrieve all datastreams.
+      if ((count($datastreams) == 0) || in_array($ds->id, $datastreams)) {
+        $extension = $mime_detect->getExtension($ds->mimetype);
+        $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
+          $extension;
+        if (!file_exists($ds_content_file_path)) {
+          $ds->getContent($ds_content_file_path);
+        }
+      }
+    }
+  }
 }
 
 /**

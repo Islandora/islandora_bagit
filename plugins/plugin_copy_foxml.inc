@@ -26,6 +26,8 @@
  */
 function islandora_bagit_plugin_copy_foxml_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
+  // We don't call islandora_bagit_retrieve_datastreams() here because this
+  // plugin doesn't add any datastreams.
 
   // Use the Tuque API-M to export the FOXML for the object.
   global $user;

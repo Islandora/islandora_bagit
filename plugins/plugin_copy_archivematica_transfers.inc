@@ -25,6 +25,7 @@
  */
 function islandora_bagit_plugin_copy_archivematica_transfers_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
+  islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory, array('OBJ'));
   $ds_files = islandora_bagit_get_ds_files($tmp_ds_directory);
 
   // Create a subdirectory in $tmp_ds_directory.
