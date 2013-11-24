@@ -112,18 +112,19 @@ in a given collection using Drush:
   drush --user=UID create-islandora-bag [object|collection] PID
 
 where UID is the user ID or user name of the fedoraAdmin user (or equivalent),
-'object' or 'collection' indicates whether you want to create a Bag for a single
-object or a Bag for every member of a collection, and PID is the PID of the
-Islandora object or collection.
+'object' or 'collection' indicates whether you want to create a Bag for a
+single object or a Bag for every member of a collection, and PID is the PID
+of the Islandora object or collection.
 
 Permissions and security
 ========================
 
-This module is intended for users who have a fairly high level of permissions on
-a Drupal site. Because the goal is to package up all or some of the datastreams
-in an Islandora object, users who can create and download Bags should have access
-to those datastreams. However, the module does check the current users' access
-to a datastream before adding it to the Bag.
+This module is intended for users who have a fairly high level of
+permissions on a Drupal site. Because the goal is to package up all or
+some of the datastreams in an Islandora object, users who can create and
+download Bags should have access to those datastreams. However, the module 
+does check the current users' access to a datastream before adding it to
+the Bag.
 
 Author/maintainer
 =================
@@ -133,5 +134,5 @@ Mark Jordan <mjordan at sfu dot ca>
 License
 =======
 
-Islandora BagIt is released under the GNU AFFERO GENERAL PUBLIC LICENSE, version 3.
-See LICENSE.txt for more information.
+Islandora BagIt is released under the GNU AFFERO GENERAL PUBLIC LICENSE,
+version 3. See LICENSE.txt for more information.
