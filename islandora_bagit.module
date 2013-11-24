@@ -5,10 +5,6 @@
  * Module to create BagIt Bags from Islandora objects. Requires the library at
  * https://github.com/scholarslab/BagItPHP. Consult the README.txt for
  * installation instructions.
- *
- * @todo:
- * -Add logic to create batches of Bags from collections.
- * -Make single-item Bag creation and batch creation work from Drush.
  */
 
 /**
@@ -280,14 +276,15 @@ function islandora_bagit_create_bag($islandora_object) {
   $bag = new BagIt($bag_output_path, TRUE, TRUE, FALSE, $bag_info);
 
   // Iterate through all the plugins. Each plugin must return the parameters 
-  // required for addFile() or FALSE if it doesn't want to create a file.
+  // required for addFile() (i.e., a list of file source and destination paths)
+  // or FALSE if it doesn't want to create a file.
   $plugins = variable_get('islandora_bagit_plugins', array(''));
   if (count($plugins)) {
     foreach ($plugins as $plugin => $enabled) {
       if ($enabled) {
         module_load_include('inc', 'islandora_bagit', 'plugins/' . $plugin);
         $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
-        // Process the plugins. Plugins return a list of file source and destination paths. 
+        // Process the plugins.
         if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
           // Generate octetstream sum.
           if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
@@ -338,7 +335,7 @@ function islandora_bagit_create_bag($islandora_object) {
 
   $serialized_all_added_files = implode(', ', $all_added_files);
   if (variable_get('islandora_bagit_log_bag_creation', 1)) {
-    watchdog('islandora_bagit', 'BagIt Bag created for PID !pid (!files).',
+    watchdog('islandora_bagit', 'Bag created for PID !pid (!files).',
       array('!pid' => $islandora_object->id, '!files' => $serialized_all_added_files));
   }
 
@@ -384,7 +381,8 @@ function islandora_bagit_access_check($islandora_object) {
   }
 
   // Then check whether the object is a collection (has a
-  // datastream with ID 'COLLECTION_POLICY') or not.
+  // datastream with ID 'COLLECTION_POLICY') or not. We don't
+  // want the 'Create Bag' tab to show up on collection objects.
   foreach ($islandora_object as $ds) {
     if ($ds->id == 'COLLECTION_POLICY') {
       return FALSE;
@@ -411,8 +409,8 @@ function islandora_bagit_get_plugins() {
 
 /**
  * Utility function for plugins. Iterates through the Islandora object,
- * saves specified datastreams as files in a temporary directory using the
- * DSID as the filename, and returns a list of the files saved. 
+ * saves each specified datastream as a file in a temporary directory
+ * using the DSID as the filename, and returns a list of all the files saved. 
  *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
@@ -493,7 +491,7 @@ function islandora_bagit_get_octetstream_sum($files) {
 
 /**
  * Adds metadata to the bag-info.txt metadata. Makes no attempt to wrap lines
- * at 79 characters, as recommended by the spec.
+ * at 79 characters as recommended by the spec.
  *
  * @return array
  */

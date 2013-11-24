@@ -6,8 +6,8 @@
  *
  * Creates Bags compatible with Archivematica (http://archivematica.org) 
  * transfer Bags by creating 'metadata' and 'objects' subdirectories, then
- * moving the DC datastream into the 'metadata' directory and all other
- * files into the 'objects' directory.
+ * moving the DC datastream into the 'metadata' directory and the OBJ datastream
+ * into the 'objects' directory.
  */
 
 /**
@@ -25,7 +25,9 @@
  */
 function islandora_bagit_plugin_copy_archivematica_transfers_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
-  $ds_files = islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory, array('OBJ', 'DC'));
+  // In this plugin, we only want the DC and OBJ datastreams.
+  $ds_files = islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory,
+    array('OBJ', 'DC'));
 
   // Create a subdirectory in $tmp_ds_directory.
   mkdir($tmp_ds_directory . '/metadata', 0777, TRUE);

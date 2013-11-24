@@ -4,11 +4,12 @@
  * @file
  * Plugin for the Islandora BagIt Drupal module.
  *
- * Registers all the datastreams in an Islandora object so they are
+ * Illustrates how to add a file to the Bag that is not a datastream.
+ * In this case, the file is called 'foo.xml'.
+ *
+ * Also registers all the datastreams in an Islandora object so they are
  * copied into the 'data' directory.
  *
- * Also creates a file called 'foo.xml' and adds it to the list of files
- * to be included in the Bag.
  */
 
 /**
@@ -30,11 +31,11 @@ function islandora_bagit_plugin_copy_ds_add_file_init($islandora_object, $tmp_ds
   // Generate a file called foo.xml and it to the list of files that
   // should be added to the Bag. Adding this extra file is the only
   // difference between this plugin and plugin_copy_ds_basic.inc.
-  $fooxml = islandora_bagit_generate_foo_xml($ds_files);
-  $fooxml_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . 'foo.xml';
-  file_put_contents($fooxml_path, $fooxml);
+  $foo_file_contents = islandora_bagit_generate_foo_xml($ds_files);
+  $foo_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . 'foo.xml';
+  file_put_contents($foo_file_path, $foo_file_contents);
   $files_to_add[] = array(
-    'source' => $fooxml_path,
+    'source' => $foo_file_path,
     'dest' => 'foo.xml',
   );
 
@@ -62,7 +63,8 @@ function islandora_bagit_plugin_copy_ds_add_file_init($islandora_object, $tmp_ds
 }
 
 /**
- * Uses XMLWriter to generate foo.xml.
+ * Uses XMLWriter to generate foo.xml, which contains a simple
+ * list of all the datastream files.
  *
  * @param array $file_list
  *   List of datastream files.
@@ -74,9 +76,10 @@ function islandora_bagit_generate_foo_xml($file_list) {
   $foo->openMemory();
   $foo->setIndent(TRUE);
   $foo->startDocument('1.0', 'utf-8', 'yes');
+  $foo->writeComment('This is just an example file.');
   $foo->startElement('files');
   foreach ($file_list as $filename) {
-    $foo->writeElement('file', $filename);
+    $foo->writeElement('file', basename($filename));
   }
   $foo->endElement();
   $foo->endDocument();

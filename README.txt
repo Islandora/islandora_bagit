@@ -39,24 +39,25 @@ To install the Islandora BagIt module:
 Extending and customizing the BagIt module
 ==========================================
 
-The files that are added to an Islandora object's Bag are managed by plugins. Plugins
-1) define the source path for datastream files and their destination paths in the Bag
-relative to the Bag's 'data' directory, and 2) optionally, rename datastream files or
+Files are added to an Islandora object's Bag by plugins. Plugins 1) define the
+source path for datastream files and their destination paths in the Bag relative
+to the Bag's 'data' directory, and 2) optionally, rename datastream files or
 create new files for inclusion in the Bag.
 
-The module comes with four plugins, one that copies all the datastreams in an
-Islandora object in the top level of the Bag's 'data' directory, one that creates
-an Archivematica (http://archivematica.org) transfer Bag, one that illustrates
-how to create an additional file to add to the Bag, and one that exports the FOXML
-for an Islandora object.
+The module comes with four plugins, one that copies all the datastreams in
+an Islandora object in the top level of the Bag's 'data' directory, one that
+creates an Archivematica (http://archivematica.org) transfer Bag, one that
+illustrates how to create an additional file to add to the Bag, and one that
+exports the FOXML for an Islandora object.
 
-Multiple plugins may be activated, but they all add files to the same Bag. This means
-that unless the active plugins add distinct files to the Bag, you should activate
-only one plugin. 
+Multiple plugins may be activated, but they all add files to the same Bag.
+This means you can write plugins that create one specific file and activate
+it or deactivate it as needed. Plugins will be fired in the order in which
+their filenames sort.
 
-If you have requirements not covered by the supplied plugins, you can use the plugins 
-described above to base your own on. If you write your own plugins, follow these 
-guidelines:
+If you have requirements not covered by the supplied plugins, you can use the 
+plugins described above to base your own on. If you write your own plugins, 
+follow these guidelines:
 
 a) Begin plugin filenames with 'plugin_' and end in '.inc'.
 b) Every plugin has a function that is named the same as the filename
@@ -72,11 +73,11 @@ Modifying a Bag from your own modules
 =====================================
 
 This module provides a drupal_alter() hook, which allows other modules to use
-hook_islandora_bagit_alter($bag, $islandora_object). Your module can modify the current
-Bag using any of the methods provided by the BagItPHP library. Each implementation
-of this hook must take $bag and $islandora_object as parameters; $islandora_object
-is provided so you can access properties of the object in your module easily. A
-typical implementation looks like this:
+hook_islandora_bagit_alter($bag, $islandora_object). Your module can modify the 
+current Bag using any of the methods provided by the BagItPHP library. Each
+implementation of this hook must take $bag and $islandora_object as parameters;
+$islandora_object is provided so you can access properties of the object in your
+module easily. A typical implementation looks like this:
 
 /**
  * Implementation of hook drupal_alter().
@@ -112,19 +113,17 @@ in a given collection using Drush:
 
 where UID is the user ID or user name of the fedoraAdmin user (or equivalent),
 'object' or 'collection' indicates whether you want to create a Bag for a single
-object or a Bag for every member of a collection, and PID is the PID of the Islandora
-object or collection.
+object or a Bag for every member of a collection, and PID is the PID of the
+Islandora object or collection.
 
 Permissions and security
 ========================
 
-This module is intended for users who have a fairly high level of permissions
-on a Drupal site. Because the goal is to package up all or some of the datastreams
+This module is intended for users who have a fairly high level of permissions on
+a Drupal site. Because the goal is to package up all or some of the datastreams
 in an Islandora object, users who can create and download Bags should have access
-to those datastreams. 
-
-Do not grant permission to create Bags to users who should not view all of the
-datastreams in Islandora objects.
+to those datastreams. However, the module does check the current users' access
+to a datastream before adding it to the Bag.
 
 Author/maintainer
 =================
