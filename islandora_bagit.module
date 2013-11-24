@@ -348,6 +348,9 @@ function islandora_bagit_create_bag($islandora_object) {
       array('%files' => $serialized_all_added_files)));
   }
 
+  // Allow other modules to fire the post-Bag creation hook.
+  $post_create_data = module_invoke_all('islandora_bagit_post_create', $pid, $serialized_bag_path);
+
   if (variable_get('islandora_bagit_provide_download_link', 1)) {
     // file_build_uri() needs a relative path.
     if (variable_get('islandora_file_default_scheme') == 'private') {

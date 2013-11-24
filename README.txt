@@ -103,6 +103,30 @@ function mymodule_islandora_bagit_alter($bag, $islandora_object) {
 Note that implementations of hook_islandora_bagit_alter() must call
 $bag->update() themselves, typically at the very end of the function.
 
+Post-Bag-creation hook
+======================
+
+Islandora BagIt provides an additional hook, islandora_bagit_post_create,
+allows other modules to get notifications that a Bag has just been
+created. A basic implementation is:
+
+/**
+ * Implements hook_islandora_bagit_post_create().
+ *
+ * @param string $pid
+ *   The PID of the Islandora object that the Bag was just created for.
+ *
+ * @param string $bag_path
+ *  The path to the Bag, relative to the Drupal installation directory.
+ */
+function mymodule_islandora_bagit_post_create($pid, $bag_path) {
+  // Do something interesting.
+}
+
+This hook can be used to send notification emails after a Bag has been
+created, to add the Bag to a queue for further processing, or to copy
+the Bag to a different server.
+
 Drush integration
 =================
 
