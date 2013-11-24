@@ -51,9 +51,9 @@ illustrates how to create an additional file to add to the Bag, and one that
 exports the FOXML for an Islandora object.
 
 Multiple plugins may be activated, but they all add files to the same Bag.
-This means you can write plugins that create one specific file and activate
-it or deactivate it as needed. Plugins will be fired in the order in which
-their filenames sort.
+This means you can write a plugin that creates one specific file (for example)
+and activate it or deactivate it as needed. Plugins are fired in the order
+in which their filenames sort.
 
 If you have requirements not covered by the supplied plugins, you can use the 
 plugins described above to base your own on. If you write your own plugins, 
