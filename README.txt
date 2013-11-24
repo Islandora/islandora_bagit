@@ -68,7 +68,6 @@ c) Plugins must complete all file writing and copying tasks before they return
    datastream copy plugins).
 d) Plugins return FALSE if there is an error in copying or writing files.
   
-
 Modifying a Bag from your own modules
 =====================================
 
@@ -107,7 +106,7 @@ Post-Bag-creation hook
 ======================
 
 Islandora BagIt provides an additional hook, islandora_bagit_post_create,
-allows other modules to get notifications that a Bag has just been
+that allows other modules to get notifications that a Bag has just been
 created. A basic implementation is:
 
 /**
