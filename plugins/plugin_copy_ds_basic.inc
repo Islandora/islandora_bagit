@@ -22,8 +22,7 @@
  */
 function islandora_bagit_plugin_copy_ds_basic_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
-  islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory);
-  $ds_files = islandora_bagit_get_ds_files($tmp_ds_directory);
+  $ds_files = islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory);
 
   // Add file source and dest paths for each datastream to the $files_to_add array.
   // $files_to_add['dest'] must be relative to the Bag's data subdirectory.

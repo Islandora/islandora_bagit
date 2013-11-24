@@ -279,8 +279,8 @@ function islandora_bagit_create_bag($islandora_object) {
   // Create a new bag. 
   $bag = new BagIt($bag_output_path, TRUE, TRUE, FALSE, $bag_info);
 
-  // Iterate through all the plugins. Each datastream copy plugin must return the 
-  // parameters required for addFile() or FALSE if it doesn't want to create a file.
+  // Iterate through all the plugins. Each plugin must return the parameters 
+  // required for addFile() or FALSE if it doesn't want to create a file.
   $plugins = variable_get('islandora_bagit_plugins', array(''));
   if (count($plugins)) {
     foreach ($plugins as $plugin => $enabled) {
@@ -410,51 +410,37 @@ function islandora_bagit_get_plugins() {
 }
 
 /**
- * Utility function for plugins. Iterates through the Islandora object and
- * saves specified datastreams as files. 
+ * Utility function for plugins. Iterates through the Islandora object,
+ * saves specified datastreams as files in a temporary directory using the
+ * DSID as the filename, and returns a list of the files saved. 
  *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
  * 
  * @param array $datastreams
  *   List of DSIDs to retrieve. If empty, retrieve all datastreams.
+ *
+ * @return array
  */
 function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory, $datastreams = array()) {
+  $ds_files = array();
   $mime_detect = new MimeDetect();
   foreach ($islandora_object as $ds) {
     if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
-      // Save each datastream to the temp directory, using the DSID as
-      // the filename.
       // If $datastreams is empty, retrieve all datastreams.
       if ((count($datastreams) == 0) || in_array($ds->id, $datastreams)) {
         $extension = $mime_detect->getExtension($ds->mimetype);
         $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
           $extension;
         if (!file_exists($ds_content_file_path)) {
+          // @todo: Wrap this in error catching code and report errors.
           $ds->getContent($ds_content_file_path);
+          $ds_files[] = $ds_content_file_path;
         }
       }
     }
   }
-}
-
-/**
- * Utility function for plugins. Gets list of files in the Bag's temporary
- * directory.
- *
- * @param string $dir
- *  The temporary directory where the datastream files have been downloaded
- * (may also include files created by add file plugins).
- *
- * @return array
- */
-function islandora_bagit_get_ds_files($dir) {
- // Get the directory listing for $tmp_ds_directory.
-  $files = scandir($dir);
-  // Get rid of the . and .. entries.
-  unset($files[0]);
-  unset($files[1]);
-  return $files;
+  return $ds_files;
 }
 
 /**
