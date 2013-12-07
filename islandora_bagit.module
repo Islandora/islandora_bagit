@@ -465,8 +465,10 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
  * Implements hook_islandora_object_ingested().
  */
 function islandora_bagit_islandora_object_ingested(FedoraObject $islandora_object) {
-  if (variable_get('islandora_bagit_create_on_ingest', 1)) {
-    islandora_bagit_create_bag($islandora_object);
+  if (islandora_bagit_access_check($islandora_object)) {
+    if (variable_get('islandora_bagit_create_on_ingest', 1)) {
+      islandora_bagit_create_bag($islandora_object);
+    }
   }
 }
 
@@ -478,8 +480,10 @@ function islandora_bagit_islandora_object_ingested(FedoraObject $islandora_objec
  *   See https://github.com/mjordan/islandora_bagit/issues/1.
  */
 function islandora_bagit_islandora_object_modified(FedoraObject $islandora_object) {
-  if (variable_get('islandora_bagit_create_on_modify', 1)) {
-    islandora_bagit_create_bag($islandora_object);
+  if (islandora_bagit_access_check($islandora_object)) {
+    if (variable_get('islandora_bagit_create_on_modify', 1)) {
+      islandora_bagit_create_bag($islandora_object);
+    }
   }
 }
 
