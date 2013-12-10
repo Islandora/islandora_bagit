@@ -116,23 +116,6 @@ function islandora_bagit_admin_settings() {
     '#required' => TRUE,
   );
 
-  $form['islandora_bagit_create_on_ingest'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Create Bag on object ingest'),
-    '#default_value' => variable_get('islandora_bagit_create_on_ingest', 0),
-    '#description' => t('Check this option if you want to create a Bag for
-      an object when it is ingested.'),
-  );
-
-  $form['islandora_bagit_create_on_modify'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Create Bag on object modification'),
-    '#default_value' => variable_get('islandora_bagit_create_on_modify', 0),
-    '#description' => t('Check this option if you want to create a Bag for
-      an object when it is modified. Note: This applies to object properties
-      only, and not to modifications to datastreams.'),
-  );
-
   $form['islandora_bagit_show_messages'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display messages'),
@@ -459,32 +442,6 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
     }
   }
   return $ds_files;
-}
-
-/**
- * Implements hook_islandora_object_ingested().
- */
-function islandora_bagit_islandora_object_ingested(FedoraObject $islandora_object) {
-  if (islandora_bagit_access_check($islandora_object)) {
-    if (variable_get('islandora_bagit_create_on_ingest', 1)) {
-      islandora_bagit_create_bag($islandora_object);
-    }
-  }
-}
-
-/**
- * Implements hook_islandora_object_modified(). This applies to object properties
- * only, and not to modifications to datastreams.
- *
- * @todo: Implement hook_islandora_datastream_modified().
- *   See https://github.com/mjordan/islandora_bagit/issues/1.
- */
-function islandora_bagit_islandora_object_modified(FedoraObject $islandora_object) {
-  if (islandora_bagit_access_check($islandora_object)) {
-    if (variable_get('islandora_bagit_create_on_modify', 1)) {
-      islandora_bagit_create_bag($islandora_object);
-    }
-  }
 }
 
 /**
