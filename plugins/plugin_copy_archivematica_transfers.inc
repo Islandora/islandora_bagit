@@ -40,13 +40,13 @@ function islandora_bagit_plugin_copy_archivematica_transfers_init($islandora_obj
 
   // Loop through all the other files and move them into the 'objects' subdirectory.
   foreach ($ds_files as $ds_filename) {
-    $ds_file = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds_filename;
-    if (file_exists($ds_file) && is_file($ds_file)) {
-    rename($ds_file, $tmp_ds_directory . '/objects/' . $ds_filename);
+    // $ds_file = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds_filename;
+    if (file_exists($ds_filename) && is_file($ds_filename)) {
+    rename($ds_filename, $tmp_ds_directory . '/objects/' . basename($ds_filename));
       // Add each file in the directory to $files_to_add.
       $files_to_add[] = array(
-        'source' => $tmp_ds_directory . '/objects/' . $ds_filename,
-        'dest' => 'objects/' . $ds_filename,
+        'source' => $tmp_ds_directory . '/objects/' . basename($ds_filename),
+        'dest' => 'objects/' . basename($ds_filename),
       );
     }
   }

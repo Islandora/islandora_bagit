@@ -28,13 +28,13 @@ function islandora_bagit_plugin_copy_ds_basic_init($islandora_object, $tmp_ds_di
   // $files_to_add['dest'] must be relative to the Bag's data subdirectory.
   foreach ($ds_files as $ds_filename) {
     // Add each file in the directory to $files_to_add.
-    $source_file_to_add = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds_filename;
+    $source_file_to_add = $ds_filename;
     if (file_exists($source_file_to_add) && is_file($source_file_to_add)) {
       $files_to_add[] = array(
         'source' => $source_file_to_add,
-        // We use filename here since there are no subdirectories in in the Bag's 
+        // We use basename here since there are no subdirectories in the Bag's 
         // 'data' directory.
-        'dest' => $ds_filename,
+        'dest' => basename($ds_filename),
       );
     }
   }
