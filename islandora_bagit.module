@@ -433,11 +433,18 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
         $extension = $mime_detect->getExtension($ds->mimetype);
         $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
           $extension;
+        // Only get the datastream if it doesn't already exist.
         if (!file_exists($ds_content_file_path)) {
-          // @todo: Wrap this in error catching code and report errors.
-          $ds->getContent($ds_content_file_path);
-          if (strlen($ds_content_file_path)) {
-            $ds_files[] = $ds_content_file_path;
+          try {
+            $ds->getContent($ds_content_file_path);
+            if (strlen($ds_content_file_path)) {
+              $ds_files[] = $ds_content_file_path;
+            }
+          }
+          catch (RepositoryException $e) {
+            drupal_set_message(t('Cannot save datastream file.'), 'warning');
+            watchdog('bagit', 'Could not save datastream file for datastream !dsid to !path.',
+              WATCHDOG_WARNING, array('!dsid' => $id->id, '!path' => $ds_content_file_path));
           }
         }
       }
