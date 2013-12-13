@@ -24,7 +24,7 @@
  *
  * @return array or bool
  */
-function islandora_bagit_plugin_copy_ds_add_file_init($islandora_object, $tmp_ds_directory) {
+function islandora_bagit_plugin_object_ds_add_file_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
   $ds_files = islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory);
 

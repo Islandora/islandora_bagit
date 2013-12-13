@@ -165,16 +165,28 @@ function islandora_bagit_admin_settings() {
     '#description' => t('The compression used on serialized Bags.'),
   );
 
-  $plugins = islandora_bagit_get_plugins();
-  foreach ($plugins as $plugin) {
-    $plugin_options[$plugin] = $plugin;
+  $object_plugins = islandora_bagit_get_plugins('object');
+  foreach ($object_plugins as $plugin) {
+    $object_plugin_options[$plugin] = $plugin;
   }
-  $form['islandora_bagit_plugins'] = array(
-    '#title' => t('Plugins'),
+  $form['islandora_bagit_object_plugins'] = array(
+    '#title' => t('Object plugins'),
     '#type' => 'checkboxes',
-    '#options' => $plugin_options,
-    '#default_value' => variable_get('islandora_bagit_plugins', array('')),
-    '#description' => t("Plugins are fired in their order in this list and all add files to the same Bag. You should choose at least one plugin.") 
+    '#options' => $object_plugin_options,
+    '#default_value' => variable_get('islandora_bagit_object_plugins', array('')),
+    '#description' => t("Object-level plugins. Plugins are fired in their order in this list and all add files to the same Bag. You should choose at least one plugin.") 
+  );
+
+  $collection_plugins = islandora_bagit_get_plugins('collection');
+  foreach ($collection_plugins as $plugin) {
+    $collection_plugin_options[$plugin] = $plugin;
+  }
+  $form['islandora_bagit_collection_plugins'] = array(
+    '#title' => t('Collection plugins'),
+    '#type' => 'checkboxes',
+    '#options' => $collection_plugin_options,
+    '#default_value' => variable_get('islandora_bagit_collection_plugins', array('')),
+    '#description' => t("Collection-level plugins. Plugins are fired in their order in this list and all add objects to the same Bag. You should choose at least one plugin.") 
   );
 
   $form['islandora_bagit_baginfo_settings'] = array(
@@ -298,10 +310,10 @@ function islandora_bagit_create_bag($islandora_object) {
   // Create a new bag. 
   $bag = new BagIt($bag_output_path, TRUE, TRUE, FALSE, $bag_info);
 
-  // Iterate through all the plugins. Each plugin must return the parameters 
+  // Iterate through all the object plugins. Each plugin must return the parameters 
   // required for addFile() (i.e., a list of file source and destination paths)
   // or FALSE if it doesn't want to create a file.
-  $plugins = variable_get('islandora_bagit_plugins', array(''));
+  $plugins = variable_get('islandora_bagit_object_plugins', array(''));
   if (count($plugins)) {
     foreach ($plugins as $plugin => $enabled) {
       if ($enabled) {
@@ -420,12 +432,15 @@ function islandora_bagit_access_check($islandora_object) {
 /**
  * Get list of plugin filenames.
  *
+ * @param string $type
+ *  Either 'object' or 'collection'.
+ *
  * @return array
  */
-function islandora_bagit_get_plugins() {
+function islandora_bagit_get_plugins($type = 'object') {
   $plugins = array();
   $module_dir = drupal_get_path('module', 'islandora_bagit');
-  $plugin_files = file_scan_directory($module_dir . '/plugins', '/^plugin_.*\.inc$/');
+  $plugin_files = file_scan_directory($module_dir . '/plugins', '/^plugin_' . $type . '.*\.inc$/');
   sort($plugin_files);
   foreach ($plugin_files as $plugin) {
     $plugins[] = $plugin->name;

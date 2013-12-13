@@ -24,7 +24,7 @@
  *
  * @return array or bool
  */
-function islandora_bagit_plugin_copy_foxml_init($islandora_object, $tmp_ds_directory) {
+function islandora_bagit_plugin_object_foxml_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
 
   // We don't call islandora_bagit_retrieve_datastreams() here because this

@@ -23,7 +23,7 @@
  * @return array or bool
  *
  */
-function islandora_bagit_plugin_copy_archivematica_transfers_init($islandora_object, $tmp_ds_directory) {
+function islandora_bagit_plugin_object_archivematica_transfers_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
   // In this plugin, we only want the DC and OBJ datastreams.
   $ds_files = islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory,
