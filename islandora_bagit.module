@@ -272,8 +272,16 @@ function islandora_bagit_admin_settings() {
  * @return string or array
  */
 function islandora_bagit_create_bag($islandora_object) {
-  $pid = str_replace(array(':','-'), '_', $islandora_object->id);
+  // First, check to see if the object is a collection, and if it is,
+  // reroute to the batch function.
+  foreach ($islandora_object as $ds) {
+    if ($ds->id == 'COLLECTION_POLICY') {
+      islandora_bagit_create_bag_batch($islandora_object);
+      return array();
+    }
+  }
 
+  $pid = str_replace(array(':','-'), '_', $islandora_object->id);
   // Save all the datastreams to a randomly named temporary directory so 
   // they can be added to the Bag. We delete these files after creating the Bag.
   $random_string = substr(md5(rand()),0,7);
@@ -404,8 +412,111 @@ function islandora_bagit_create_bag($islandora_object) {
 }
 
 /**
- * Custom menu access callback. Checks user privileges and whether
- * the object is a collection or item.
+ * Creates a set of Bags, one per child object, via the Drupal Batch API.
+ *
+ * @param object $islandora_object
+ *   The Islandora collection object to create the Bags for.
+ */
+function islandora_bagit_create_bag_batch($islandora_object) {
+  $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
+  $num_objects = count($objects_to_include);
+  $operations = array();
+
+  // Add earch object in the collection to the $operations array.
+  foreach ($objects_to_include  as $pid) {
+    $operations[] = array('islandora_bagit_process_batch', array($pid, $num_objects));
+  }
+
+  $batch = array(
+    'operations' => $operations,
+    'title' => t('Creating Bag(s)'),
+    'init_message' => t('Initializing'),
+    'error_message' => t('An error occurred'),
+    'finished' => 'islandora_bagit_batch_finished'
+  );
+
+  batch_set($batch);
+  // batch_process() is required if the batch is not initiated within a form
+  // handler. Paramter is the URL to redirect the user to, in this case, do 
+  // not redirect.
+  batch_process('');
+}
+
+/**
+ * Process one object in the batch.
+ *
+ * @param string $pid
+ *  The current object's PID.
+ *
+ * @param string $num_objects
+ *   The number of objects in this batch.
+ *
+ * @param array $context
+ *   The Batch API $context array.
+ *  
+ */
+function islandora_bagit_process_batch($pid, $num_objects, &$context) {
+  if (empty($context['sandbox'])) {
+    $context['sandbox'] = array();
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['current_node'] = 0;
+    $context['sandbox']['max'] = $num_objects;
+    $context['results'][] = $pid;
+    $context['message'] = t('Creating Bag for object @pid', array('@pid' => $pid));
+  }
+ 
+  $islandora_object = islandora_object_load($pid);
+  islandora_bagit_create_bag($islandora_object);
+}
+
+/**
+ * Batch API 'finished' callback.
+ *
+ * @param boolean $success
+ *  TRUE if no fatal PHP errors were detected.
+ *
+ * @param array $results
+ *  List of all the object PIDs processed.
+ *
+ * @param array $operations
+ *  List of all the operations processed.
+ */
+function islandora_bagit_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('@count Bags processed.', array('@count' => count($results))));
+  }
+  else {
+    $error_operation = reset($operations);
+    drupal_set_message(t('An error occurred while processing @operation with arguments : @args', array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
+  }
+}
+
+/**
+ * Query the RI index to get all child objects in the collection.
+ *
+ * @param object $islandora_object
+ *   The Islandora collection object to create the Bags for.
+ */
+function islandora_bagit_get_batch_members($islandora_object) {
+  // List of objects to create Bags for.
+  $objects_to_bag = array();
+
+  // Query the rindex to get all the objects that have a 'isMemberOfCollection'
+  // relationship with the specified collection and add all their PIDs to the list.
+  $tuque = islandora_get_tuque_connection();
+  $ri_query = 'select $object from <#ri>
+    where  $object <fedora-rels-ext:isMemberOfCollection> <info:fedora/' . $islandora_object->id . '>';
+  $members = $tuque->repository->ri->itqlQuery($ri_query, 'unlimited');
+  foreach ($members as $member) {
+    $objects_to_bag[] = $member['object']['value'];
+  }
+
+  return $objects_to_bag;
+}
+
+
+/**
+ * Custom menu access callback.
  *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
@@ -418,14 +529,6 @@ function islandora_bagit_access_check($islandora_object) {
     return FALSE;
   }
 
-  // Then check whether the object is a collection (has a
-  // datastream with ID 'COLLECTION_POLICY') or not. We don't
-  // want the 'Create Bag' tab to show up on collection objects.
-  foreach ($islandora_object as $ds) {
-    if ($ds->id == 'COLLECTION_POLICY') {
-      return FALSE;
-    }
-  }
   return TRUE;
 }
 
