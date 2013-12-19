@@ -127,6 +127,17 @@ function islandora_bagit_admin_settings() {
       serialized Bags' is accessible via the web."),
   );
 
+  $form['islandora_bagit_multiple_bag_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Collection batch type'),
+    '#default_value' => variable_get('islandora_bagit_multiple_bag_type', 'object'),
+    '#options' => array(
+      'object' => t('one Bag per object'),
+      'collection' => t('one Bag per collection'),
+    ),
+    '#description' => t('Choose whether collection-level batches create one Bag per object or one Bag per collection.'),
+  );
+
   $description =  t("Base name for the Bags. The object's PID is appended to this value.");
   $default_bag_name = variable_get('islandora_bagit_bag_name', 'Bag-');
   $form['islandora_bagit_bag_name'] = array(
@@ -264,7 +275,8 @@ function islandora_bagit_admin_settings() {
 }
 
 /**
- * Creates the Bag.
+ * Creates the Bag. Also acts as the 'controller' to pass program
+ * flow off to the appropriate batch functions.
  *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
@@ -273,10 +285,15 @@ function islandora_bagit_admin_settings() {
  */
 function islandora_bagit_create_bag($islandora_object) {
   // First, check to see if the object is a collection, and if it is,
-  // reroute to the batch function.
+  // reroute to the right batch function.
   foreach ($islandora_object as $ds) {
     if ($ds->id == 'COLLECTION_POLICY') {
-      islandora_bagit_create_bag_batch($islandora_object);
+      if (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'object') {
+        islandora_bagit_create_object_bag_batch($islandora_object);
+      }
+      if (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'collection') {
+        islandora_bagit_create_collection_bag_batch($islandora_object);
+      }      
       return array();
     }
   }
@@ -412,12 +429,23 @@ function islandora_bagit_create_bag($islandora_object) {
 }
 
 /**
+ * Creates a single Bag, containing all objects in a collection, via the
+ * Drupal Batch API.
+ *
+ * @param object $islandora_object
+ *   The Islandora collection object to create the Bags for.
+ */
+function islandora_bagit_create_collection_bag_batch($islandora_object) {
+   drupal_set_message(t('Creating one Bag per collection is under development.')); 
+}
+
+/**
  * Creates a set of Bags, one per child object, via the Drupal Batch API.
  *
  * @param object $islandora_object
  *   The Islandora collection object to create the Bags for.
  */
-function islandora_bagit_create_bag_batch($islandora_object) {
+function islandora_bagit_create_object_bag_batch($islandora_object) {
   $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
   $num_objects = count($objects_to_include);
   $operations = array();
@@ -453,7 +481,6 @@ function islandora_bagit_create_bag_batch($islandora_object) {
  *
  * @param array $context
  *   The Batch API $context array.
- *  
  */
 function islandora_bagit_process_batch($pid, $num_objects, &$context) {
   if (empty($context['sandbox'])) {
@@ -514,7 +541,6 @@ function islandora_bagit_get_batch_members($islandora_object) {
   return $objects_to_bag;
 }
 
-
 /**
  * Custom menu access callback.
  *
@@ -528,7 +554,6 @@ function islandora_bagit_access_check($islandora_object) {
   if (!user_access('create Islandora Bags')) {
     return FALSE;
   }
-
   return TRUE;
 }
 
