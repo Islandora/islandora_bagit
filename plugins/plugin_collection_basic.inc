@@ -4,7 +4,8 @@
  * @file
  * Plugin for the Islandora BagIt Drupal module.
  *
- * Simple placeholder with no functionality.
+ * Within the Bag created for the collection, arranges child objects
+ * in their own directories as illustrated below.
  */
 
 /**
@@ -25,9 +26,9 @@
 function islandora_bagit_plugin_collection_basic_init($islandora_object, $files_to_add, $tmp_ds_directory) {
 /*
  * Collection plugins create object-level directories (or hierarchical
- * groups of them) but allow object plugins to arrange datastream
- * and other files as they normally would within those directories.
- * For example, in order to achieve this sort of output arrangement:
+ * groups of them) while allowing object plugins to arrange datastream
+ * and other files within those directories. For example, in order to
+ * achieve this sort of output arrangement:
  *
  * mybag/
  *   data/
@@ -40,30 +41,35 @@ function islandora_bagit_plugin_collection_basic_init($islandora_object, $files_
  *           somefile.xml
  *       object_92/
  *
- * a collection plugin would need to create an object-level directory
- * in $tmp_ds_directory and then pass back to the main module the
+ * this collection plugin creates an object-level directory in 
+ * $tmp_ds_directory and then passes back to the main module the
  * $files_to_add array containing the new filepaths.
  * 
- * To do this, each collection plugin should be called once
- * per object and take as a paramter the returned $files_to_add array
- * after it has been passed through all object plugins. They would then 
- * prepend path information (like 'object_91' in this example) to the
- * 'dest' value.
+ * Each collection plugin will be called once per child object and
+ * take as a parameter the $files_to_add array after it has been
+ * passed through all object plugins. The collection plugin modifies
+ * the 'source' and 'dest' members for each file in $files_to_add to
+ * include all new path information (like 'object_91' in this example).
  *
  * Also, collection plugins must create any directories in $tmp_ds_directory
  * that are part of the destination path for datastream files and then
- * move them into the new directories.
+ * move them into the new directories before returning the modified
+ * $files_to_add array.
  */
+ 
+  if (!count($files_to_add)) {
+    return FALSE;
+  }
   
-  // Sanitize the PID so it can be used in file paths.
+  // Sanitize the object's PID so it can be used in file paths.
   $clean_pid = str_replace(array(':','-'), '_', $islandora_object->id);
   
   // This plugin creates a directory for each object in the batch in
   // $tmp_ds_directory which parallels the arrangement illustrated above.
-  $object_dir = $tmp_ds_directory . DIRECTORY_SEPARATOR . $clean_pid;
+  $object_tmp_dir = $tmp_ds_directory . DIRECTORY_SEPARATOR . $clean_pid;
   // Create the object-level directory.
-  if (!file_exists($object_dir)) {
-    mkdir($object_dir, 0777, TRUE);
+  if (!file_exists($object_tmp_dir)) {
+    mkdir($object_tmp_dir, 0777, TRUE);
   }  
   
   // For each of the files in $files_to_add, 1) move each file from its
@@ -71,11 +77,14 @@ function islandora_bagit_plugin_collection_basic_init($islandora_object, $files_
   // the $files_to_add array so that the source and dest include the
   // object-level directories.
   foreach ($files_to_add as &$file) {
-      // Move the file from $source to $object_dir . basename($source)
-      rename ($file['source'], $object_dir . DIRECTORY_SEPARATOR . basename($file['source']));
+      $object_source_path = $object_tmp_dir . DIRECTORY_SEPARATOR . basename($file['source']);
+      // Move the file from its current location in $tmp_ds_directory to its new
+      // object-specific location in $object_tmp_dir.
+      rename($file['source'], $object_source_path);
       // Modify the source and destination paths for each file so they can be
       // passed back to the main module to be added to the Bag.
-      $file['source'] = $object_dir . DIRECTORY_SEPARATOR . basename($file['source']);
+      $file['source'] = $object_source_path;
+      // $file['dest'] is relative to the Bag's 'data' directory, as illustrated above.
       $file['dest'] = $clean_pid . DIRECTORY_SEPARATOR . basename($file['source']);
   }
   
