@@ -26,7 +26,7 @@
  * @param string $tmp_ds_directory
  *  The temporary directory where the datastream files have been downloaded.
  * 
- * @return string
+ * @return array
  */
 function islandora_bagit_plugin_collection_oddeven_init($islandora_object, $files_to_add, $tmp_ds_directory) {
 /*

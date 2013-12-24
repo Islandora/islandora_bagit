@@ -4,7 +4,8 @@
  * @file
  * Module to create BagIt Bags from Islandora objects. Requires the library at
  * https://github.com/scholarslab/BagItPHP. Consult the README.txt for
- * installation instructions.
+ * instructions.
+ * instructions.
  */
 
 /**
@@ -28,6 +29,22 @@ function islandora_bagit_permission() {
       'description' => t('Administer Islandora BagIt'),
     ),
   );
+}
+
+/**
+ * Custom menu access callback.
+ *
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ *
+ * @return bool
+ */
+function islandora_bagit_access_check($islandora_object) {
+  // First, check the user's privileges.
+  if (!user_access('create Islandora Bags')) {
+    return FALSE;
+  }
+  return TRUE;
 }
 
 /**
@@ -436,6 +453,94 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 }
 
+/**************************
+ * Object batch functions *
+ *************************/
+ 
+ /**
+ * Creates a set of Bags, one per child object, via the Drupal Batch API.
+ *
+ * @param object $islandora_object
+ *   The Islandora collection object to create the Bags for.
+ */
+function islandora_bagit_create_object_bag_batch($islandora_object) {
+  $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
+  $num_objects = count($objects_to_include);
+  $operations = array();
+
+  // Add earch object in the collection to the $operations array.
+  foreach ($objects_to_include as $pid) {
+    $operations[] = array('islandora_bagit_process_object_batch', array($pid, $num_objects));
+  }
+
+  $batch = array(
+    'operations' => $operations,
+    'title' => t('Creating Bags'),
+    'init_message' => t('Initializing'),
+    'error_message' => t('An error occurred'),
+    'finished' => 'islandora_bagit_object_batch_finished'
+  );
+
+  batch_set($batch);
+  // batch_process() is required if the batch is not initiated within a form
+  // handler. Paramter is the URL to redirect the user to, in this case, do 
+  // not redirect.
+  batch_process('');
+}
+
+/**
+ * Process one object in the batch.
+ *
+ * @param string $pid
+ *  The current object's PID.
+ *
+ * @param string $num_objects
+ *   The number of objects in this batch.
+ *
+ * @param array $context
+ *   The Batch API $context array.
+ */
+function islandora_bagit_process_object_batch($pid, $num_objects, &$context) {
+  if (empty($context['sandbox'])) {
+    $context['sandbox'] = array();
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['current_node'] = 0;
+    $context['sandbox']['max'] = $num_objects;
+    $context['results'][] = $pid;
+    $context['message'] = t('Creating Bag for object @pid', array('@pid' => $pid));
+  }
+ 
+  $islandora_object = islandora_object_load($pid);
+  islandora_bagit_create_bag($islandora_object);
+}
+
+/**
+ * Batch API 'finished' callback.
+ *
+ * @param boolean $success
+ *  TRUE if no fatal PHP errors were detected.
+ *
+ * @param array $results
+ *  List of all the object PIDs processed.
+ *
+ * @param array $operations
+ *  List of all the operations processed.
+ */
+function islandora_bagit_object_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('@count Bags processed.', array('@count' => count($results))));
+  }
+  else {
+    $error_operation = reset($operations);
+    drupal_set_message(t('An error occurred while processing @operation with arguments : @args',
+      array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
+  }
+}
+
+/******************************
+ * Collection batch functions *
+ * ***************************/
+
 /**
  * Creates a single Bag, containing all objects in a collection, via the
  * Drupal Batch API.
@@ -528,86 +633,6 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
   }
   else {
     return '';
-  }
-}
-
-/**
- * Creates a set of Bags, one per child object, via the Drupal Batch API.
- *
- * @param object $islandora_object
- *   The Islandora collection object to create the Bags for.
- */
-function islandora_bagit_create_object_bag_batch($islandora_object) {
-  $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
-  $num_objects = count($objects_to_include);
-  $operations = array();
-
-  // Add earch object in the collection to the $operations array.
-  foreach ($objects_to_include as $pid) {
-    $operations[] = array('islandora_bagit_process_object_batch', array($pid, $num_objects));
-  }
-
-  $batch = array(
-    'operations' => $operations,
-    'title' => t('Creating Bags'),
-    'init_message' => t('Initializing'),
-    'error_message' => t('An error occurred'),
-    'finished' => 'islandora_bagit_object_batch_finished'
-  );
-
-  batch_set($batch);
-  // batch_process() is required if the batch is not initiated within a form
-  // handler. Paramter is the URL to redirect the user to, in this case, do 
-  // not redirect.
-  batch_process('');
-}
-
-/**
- * Process one object in the batch.
- *
- * @param string $pid
- *  The current object's PID.
- *
- * @param string $num_objects
- *   The number of objects in this batch.
- *
- * @param array $context
- *   The Batch API $context array.
- */
-function islandora_bagit_process_object_batch($pid, $num_objects, &$context) {
-  if (empty($context['sandbox'])) {
-    $context['sandbox'] = array();
-    $context['sandbox']['progress'] = 0;
-    $context['sandbox']['current_node'] = 0;
-    $context['sandbox']['max'] = $num_objects;
-    $context['results'][] = $pid;
-    $context['message'] = t('Creating Bag for object @pid', array('@pid' => $pid));
-  }
- 
-  $islandora_object = islandora_object_load($pid);
-  islandora_bagit_create_bag($islandora_object);
-}
-
-/**
- * Batch API 'finished' callback.
- *
- * @param boolean $success
- *  TRUE if no fatal PHP errors were detected.
- *
- * @param array $results
- *  List of all the object PIDs processed.
- *
- * @param array $operations
- *  List of all the operations processed.
- */
-function islandora_bagit_object_batch_finished($success, $results, $operations) {
-  if ($success) {
-    drupal_set_message(t('@count Bags processed.', array('@count' => count($results))));
-  }
-  else {
-    $error_operation = reset($operations);
-    drupal_set_message(t('An error occurred while processing @operation with arguments : @args',
-      array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
   }
 }
 
@@ -824,108 +849,12 @@ function islandora_bagit_collection_batch_finish_bag() {
   }
 }
 
-/**
- * Query the RI index to get all child objects in the collection.
- *
- * @param object $islandora_object
- *   The Islandora collection object to create the Bags for.
- */
-function islandora_bagit_get_batch_members($islandora_object) {
-  // List of objects to create Bags for.
-  $objects_to_bag = array();
-
-  // Query the rindex to get all the objects that have a 'isMemberOfCollection'
-  // relationship with the specified collection and add all their PIDs to the list.
-  $tuque = islandora_get_tuque_connection();
-  $ri_query = 'select $object from <#ri>
-    where  $object <fedora-rels-ext:isMemberOfCollection> <info:fedora/' . $islandora_object->id . '>';
-  $members = $tuque->repository->ri->itqlQuery($ri_query, 'unlimited');
-  foreach ($members as $member) {
-    $objects_to_bag[] = $member['object']['value'];
-  }
-
-  return $objects_to_bag;
-}
-
-/**
- * Custom menu access callback.
- *
- * @param object $islandora_object
- *   The Islandora object to create a Bag for.
- *
- * @return bool
- */
-function islandora_bagit_access_check($islandora_object) {
-  // First, check the user's privileges.
-  if (!user_access('create Islandora Bags')) {
-    return FALSE;
-  }
-  return TRUE;
-}
-
-/**
- * Get list of plugin filenames.
- *
- * @param string $type
- *  Either 'object' or 'collection'.
- *
- * @return array
- */
-function islandora_bagit_get_plugins($type = 'object') {
-  $plugins = array();
-  $module_dir = drupal_get_path('module', 'islandora_bagit');
-  $plugin_files = file_scan_directory($module_dir . '/plugins', '/^plugin_' . $type . '.*\.inc$/');
-  sort($plugin_files);
-  foreach ($plugin_files as $plugin) {
-    $plugins[] = $plugin->name;
-  }
-  return $plugins;
-}
-
-/**
- * Utility function for plugins. Iterates through the Islandora object,
- * saves each specified datastream as a file in a temporary directory
- * using the DSID as the filename, and returns a list of all the files saved. 
- *
- * @param object $islandora_object
- *   The Islandora object to create a Bag for.
- * 
- * @param array $datastreams
- *   List of DSIDs to retrieve. If empty, retrieve all datastreams.
- *
- * @return array
- */
-function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory, $datastreams = array()) {
-  $ds_files = array();
-  $mime_detect = new MimeDetect();
-  foreach ($islandora_object as $ds) {
-    if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
-      // If $datastreams is empty, retrieve all datastreams.
-      if ((count($datastreams) == 0) || in_array($ds->id, $datastreams)) {
-        $extension = $mime_detect->getExtension($ds->mimetype);
-        $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
-          $extension;
-        // Only get the datastream if it doesn't already exist.
-        if (!file_exists($ds_content_file_path)) {
-          try {
-            $ds->getContent($ds_content_file_path);
-            if (strlen($ds_content_file_path)) {
-              $ds_files[] = $ds_content_file_path;
-            }
-          }
-          catch (RepositoryException $e) {
-            drupal_set_message(t('Cannot save datastream file.'), 'warning');
-            watchdog('bagit', 'Could not save datastream file for datastream !dsid to !path.',
-              WATCHDOG_WARNING, array('!dsid' => $id->id, '!path' => $ds_content_file_path));
-          }
-        }
-      }
-    }
-  }
-  return $ds_files;
-}
-
-/**
+/*****************************************************************
+ * Islandora hooks for detecting object and datastream ingestion *
+ * and modification.                                             *
+ * **************************************************************/
+ 
+ /**
  * Implements hook_islandora_object_ingested().
  *
  * Creates a Bag when an object is ingested.
@@ -983,9 +912,58 @@ function islandora_bagit_create_bag_on_shutdown() {
   }
 }
 
+/*******************
+ * Misc. functions *
+ * ****************/
+
+/**
+ * Iterates through the Islandora object, saves each specified datastream
+ * as a file in a temporary directory using the DSID as the filename,
+ * and returns a list of all the files saved. 
+ *
+ * @param object $islandora_object
+ *   The Islandora object to create a Bag for.
+ * 
+ * @param array $datastreams
+ *   List of DSIDs to retrieve. If empty, retrieve all datastreams.
+ *
+ * @return array
+ */
+function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory, $datastreams = array()) {
+  $ds_files = array();
+  $mime_detect = new MimeDetect();
+  foreach ($islandora_object as $ds) {
+    if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
+      // If $datastreams is empty, retrieve all datastreams.
+      if ((count($datastreams) == 0) || in_array($ds->id, $datastreams)) {
+        $extension = $mime_detect->getExtension($ds->mimetype);
+        $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
+          $extension;
+        // Only get the datastream if it doesn't already exist.
+        if (!file_exists($ds_content_file_path)) {
+          try {
+            $ds->getContent($ds_content_file_path);
+            if (strlen($ds_content_file_path)) {
+              $ds_files[] = $ds_content_file_path;
+            }
+          }
+          catch (RepositoryException $e) {
+            drupal_set_message(t('Cannot save datastream file.'), 'warning');
+            watchdog('bagit', 'Could not save datastream file for datastream !dsid to !path.',
+              WATCHDOG_WARNING, array('!dsid' => $id->id, '!path' => $ds_content_file_path));
+          }
+        }
+      }
+    }
+  }
+  return $ds_files;
+}
+
 /**
  * Serialize and write to a file the Bag object. Saving the Bag to a
  * $_SESSION variable resulted in unavoidable 'incomplete object' errors.
+ * Note: This has nothing to do with serializing (zipping) a Bag, it's
+ * a replacement for using Drupal's $_SESSION.
  * 
  * @param object $bag
  *   The Bag object.
@@ -1021,35 +999,6 @@ function islandora_bagit_unserialize_bag_object() {
   $serialized_bag_string = file_get_contents($path);
   $bag = unserialize($serialized_bag_string);
   return $bag;
-}
-
-/**
- * Implementation of hook_file_dowload().
- */
-function islandora_bagit_file_download($uri) {
-  // Get the file's name.
-  $file_name = basename($uri);
-  // Get the file's size.
-  $path = variable_get('islandora_bagit_bag_output_dir', '') . DIRECTORY_SEPARATOR . 
-    $file_name;
-  // If the file is in the Bag output directory, this module controls
-  // access to it; if it's not, this module doesn't control access to
-  // it so we return NULL.
-  if (!file_exists($path)) {
-    return NULL;
-  }
-
-  if (user_access('create Islandora Bags')) {
-    $file_size = stat($path);
-    return array(
-      'Content-Type' => 'application/octet-stream',
-      'Content-Length' => $file_size['size'],
-      'Content-Disposition' => 'attachment; filename=' . $file_name,
-    );
-  }
-  else {
-    return -1;
-  }
 }
 
 /**
@@ -1101,4 +1050,77 @@ function islandora_bagit_create_baginfo() {
     $bag_info['Bagging-Date'] = date("Y-m-d");
   }
   return $bag_info;
+}
+
+/**
+ * Query the RI index to get PIDs of all child objects in the collection.
+ *
+ * @param object $islandora_object
+ *   The Islandora collection object to create the Bags for.
+ * 
+ * @return array
+ */
+function islandora_bagit_get_batch_members($islandora_object) {
+  // List of objects to create Bags for.
+  $objects_to_bag = array();
+
+  // Query the rindex to get all the objects that have a 'isMemberOfCollection'
+  // relationship with the specified collection and add all their PIDs to the list.
+  $tuque = islandora_get_tuque_connection();
+  $ri_query = 'select $object from <#ri>
+    where  $object <fedora-rels-ext:isMemberOfCollection> <info:fedora/' . $islandora_object->id . '>';
+  $members = $tuque->repository->ri->itqlQuery($ri_query, 'unlimited');
+  foreach ($members as $member) {
+    $objects_to_bag[] = $member['object']['value'];
+  }
+
+  return $objects_to_bag;
+}
+
+/**
+ * Get list of plugin filenames.
+ *
+ * @param string $type
+ *  Either 'object' or 'collection'.
+ *
+ * @return array
+ */
+function islandora_bagit_get_plugins($type = 'object') {
+  $plugins = array();
+  $module_dir = drupal_get_path('module', 'islandora_bagit');
+  $plugin_files = file_scan_directory($module_dir . '/plugins', '/^plugin_' . $type . '.*\.inc$/');
+  sort($plugin_files);
+  foreach ($plugin_files as $plugin) {
+    $plugins[] = $plugin->name;
+  }
+  return $plugins;
+}
+
+/**
+ * Implementation of hook_file_dowload().
+ */
+function islandora_bagit_file_download($uri) {
+  // Get the file's name.
+  $file_name = basename($uri);
+  // Get the file's size.
+  $path = variable_get('islandora_bagit_bag_output_dir', '') . DIRECTORY_SEPARATOR . 
+    $file_name;
+  // If the file is in the Bag output directory, this module controls
+  // access to it; if it's not, this module doesn't control access to
+  // it so we return NULL.
+  if (!file_exists($path)) {
+    return NULL;
+  }
+
+  if (user_access('create Islandora Bags')) {
+    $file_size = stat($path);
+    return array(
+      'Content-Type' => 'application/octet-stream',
+      'Content-Length' => $file_size['size'],
+      'Content-Disposition' => 'attachment; filename=' . $file_name,
+    );
+  }
+  else {
+    return -1;
+  }
 }
