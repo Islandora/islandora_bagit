@@ -71,16 +71,17 @@ c) Plugins must complete all file writing and copying tasks before they return
 d) Plugins return FALSE if there is an error in copying or writing files.
 
 Collection plugins only apply to Bags that contain all the objects in a
-collecion. Whereas object plugins determine what goes in each object-level
+collection. Whereas object plugins determine what goes in each object-level
 Bag, collection plugins determine how all the objects that are in a
-collection-level Bag are arranged in the Bag's 'data' directory.
+collection-level Bag are arranged in the Bag's 'data' directory. Also, you
+can only activate one collection plugin at a time, unlike object plugins.
 
 The requirements for collection plugins are the same as those for object plugins
-except for the requirement labelled a) above: collection plugin filenames being
-with 'plugin_collection_' instead of 'plugin_object_'.
+except for the requirement a) above: collection plugin filenames being with
+'plugin_collection_' instead of 'plugin_object_'.
 
-The module comes with two collection plugins, one that creates a directory for
-each object in the Bag's 'data' directory, and one that creates an 'odd' and
+The module comes with two collection plugins, one that creates a subdirectory
+for each object in the Bag's 'data' directory, and one that creates an 'odd'
 and 'even' subdirectory in the Bag's 'data' directory, and then organizes 
 object-level Bags within those two subdirectories. The odd/even plugin is
 intended to illustrate alternative ways to organize objects within a collection
