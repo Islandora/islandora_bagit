@@ -64,28 +64,15 @@ function drush_islandora_bagit_create_islandora_bag($type = 'object', $pid = NUL
     return FALSE;
   }
 
-  global $user;
-  $fedora_url = variable_get('islandora_base_url', 'http://localhost:8000/fedora');
-
-  // Use Tuque to connect to Fedora repo.
-  islandora_bagit_drush_include_tuque();
-  $connection = new RepositoryConnection($fedora_url, $user->name, $user->pass);
-  $connection->reuseConnection = TRUE;
-  $repository = new FedoraRepository(new FedoraApi($connection), new SimpleCache());
-
   // List of objects to create Bags for.
   $objects_to_bag = array();
 
   // To create a Bag for every object in a collection, query the rindex to get all
   // the objects that have a 'isMemberOfCollection' relationship with the specified
   // collection and add all their PIDs to the list..
-  if ($type == 'collection') { 
-    $ri_query = 'select $object from <#ri>
-      where  $object <fedora-rels-ext:isMemberOfCollection> <info:fedora/' . $pid . '>';
-    $members = $repository->ri->itqlQuery($ri_query, 'unlimited');
-    foreach ($members as $member) {
-      $objects_to_bag[] = $member['object']['value'];
-   }
+  if ($type == 'collection') {
+    $collection_object = islandora_object_load($pid);
+    $objects_to_bag = islandora_bagit_get_batch_members($collection_object);
   }
   // If we're dealing with a single object, just add its PID to the list.
   if ($type == 'object') {
@@ -97,15 +84,13 @@ function drush_islandora_bagit_create_islandora_bag($type = 'object', $pid = NUL
     return FALSE;
   }
 
-  if ($connection) {
-    foreach ($objects_to_bag as $object_to_bag_pid) {    
-      try {
-        $islandora_object = $repository->getObject($object_to_bag_pid);
-        islandora_bagit_create_bag($islandora_object);
-      }
-      catch (RepositoryException $e) {
-        drush_print("Sorry, Islandora cannot create the Bag: " . $e->getMessage());
-      }
+  foreach ($objects_to_bag as $object_to_bag_pid) {    
+    try {
+      $islandora_object = islandora_object_load($object_to_bag_pid);
+      islandora_bagit_create_bag($islandora_object);
+    }
+    catch (RepositoryException $e) {
+      drush_print("Sorry, Islandora cannot create the Bag: " . $e->getMessage());
     }
   }
 }
