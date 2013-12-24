@@ -137,6 +137,13 @@ function islandora_bagit_admin_settings() {
     ),
     '#description' => t('Choose whether collection-level batches create one Bag per object or one Bag per collection.'),
   );
+  
+  $form['islandora_bagit_serialize_collection_bags'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Serialize collection Bags.'),
+    '#default_value' => variable_get('islandora_bagit_serialize_collection_bags', 0),
+    '#description' => t('Check this option if you want to serialize (zip) one-Bag-per-collection Bags.'),
+  );
 
   $description =  t("Base name for the Bags. The object's PID is appended to this value.");
   $default_bag_name = variable_get('islandora_bagit_bag_name', 'Bag-');
@@ -735,23 +742,38 @@ function islandora_bagit_collection_batch_finish_bag() {
   $bag = islandora_bagit_unserialize_bag_object();
     
   // Generate octetstream sum.
-  if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
-    $sum = islandora_bagit_get_octetstream_sum($all_added_files);
-    $bag->setBagInfoData('Payload-Oxum', $sum);
-  }
+  // @todo: This is broken ATM since $all_added_files doesn't
+  // contain the source file paths. See issue https://github.com/mjordan/islandora_bagit/issues/3
+  // if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
+    // $sum = islandora_bagit_get_octetstream_sum($all_added_files);
+    // $bag->setBagInfoData('Payload-Oxum', $sum);
+  // }
 
   // Allow other modules to modify the Bag using 
   // mymodule_islandora_bagit_alter($bag, $islandora_object).
   drupal_alter('islandora_bagit', $bag, $islandora_object);
 
-  // Write out the serialized (i.e., compressed) Bag.
-  $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
-    DIRECTORY_SEPARATOR . $bag_file_name;
-  $compression_type = variable_get('islandora_bagit_compression_type', 'tgz');
-  $bag->package($serialized_bag_path, $compression_type); 
-
-  if (variable_get('islandora_bagit_delete_unserialized_bag', 1)) {
-    rrmdir($bag_output_path);
+  if (variable_get('islandora_bagit_serialize_collection_bags', 0)) {
+    // Write out the serialized (i.e., compressed) Bag.
+    $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
+      DIRECTORY_SEPARATOR . $bag_file_name;
+    $compression_type = variable_get('islandora_bagit_compression_type', 'tgz');
+    $bag->package($serialized_bag_path, $compression_type);
+    
+    if (variable_get('islandora_bagit_show_messages', 1)) {
+      $serialized_bag_path .=  '.' . $compression_type;
+      drupal_set_message(t("Serialized collection Bag created and saved at %path", array(
+        '%path' => $serialized_bag_path,
+      )));
+    }
+    
+    if (variable_get('islandora_bagit_delete_unserialized_bag', 1)) {
+      rrmdir($bag_output_path);
+    }
+  }
+  else {
+    drupal_set_message(t("Collection Bag created at %path", array(
+      '%path' => $bag_output_path)));
   }
 
   // Delete the temp directory created by file create plugins, if it exists.
@@ -772,19 +794,20 @@ function islandora_bagit_collection_batch_finish_bag() {
       array('!pid' => $pid, '!files' => $serialized_all_added_files));
   }
 
-  $serialized_bag_path .=  '.' . $compression_type;
   if (variable_get('islandora_bagit_show_messages', 1)) {
-    drupal_set_message(t("Bag created and saved at %path", array(
-      '%path' => $serialized_bag_path,
-      )));
     drupal_set_message(t("Files added: %files", 
       array('%files' => $serialized_all_added_files)));
   }
 
   // Allow other modules to fire the post-Bag creation hook.
-  $post_create_data = module_invoke_all('islandora_bagit_post_create', $pid, $serialized_bag_path);
+  if (variable_get('islandora_bagit_serialize_collection_bags', 0)) {
+    $post_create_data = module_invoke_all('islandora_bagit_post_create', $pid, $serialized_bag_path);
+  }
+  else {
+    $post_create_data = module_invoke_all('islandora_bagit_post_create', $pid, $bag_output_path);
+  }
 
-  if (variable_get('islandora_bagit_provide_download_link', 1)) {
+  if (variable_get('islandora_bagit_provide_download_link', 1) && variable_get('islandora_bagit_serialize_collection_bags', 0)) {
     // file_build_uri() needs a relative path.
     if (variable_get('islandora_file_default_scheme') == 'private') {
       $drupal_files_path = variable_get('islandora_file_private_path');
