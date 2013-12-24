@@ -121,6 +121,36 @@ function mymodule_islandora_bagit_alter($bag, $islandora_object) {
 Note that implementations of hook_islandora_bagit_alter() must call
 $bag->update() themselves, typically at the very end of the function.
 
+Modifying a batch from your own modules
+=======================================
+
+If you are running a collection-level batch to create a Bag for every 
+object in a collection, or to create a single Bag containing all objects
+in a collection, you can define filters on which objects get included using
+hook_islandora_bagit_filter_batch(). If you want an object to be excluded
+from the batch, have your instance of this hook return TRUE; if you want
+an object to be included, return FALSE (or don't issue an explicit 'return'
+at all). This example instance excludes objects with either of two specific
+PIDs:
+
+/**
+ * Implementation of hook_islandora_bagit_filter_batch().
+ *
+ * @param string $pid
+ *   A BagIt object instantiated in the BagIt module.
+ *
+ * @return bool
+ */
+function mymodule_islandora_bagit_filter_batch($pid) {
+  if ($pid == 'islandora:87' || $pid == 'islandora:91') {
+    return TRUE;
+  }
+}
+
+If you want to test other attributes of the object, you need to use
+Islandora's islandora_object_load($pid) function to load the object so
+you can access the attributes.
+
 Post-Bag-creation hook
 ======================
 

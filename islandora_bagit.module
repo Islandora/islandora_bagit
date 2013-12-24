@@ -1071,7 +1071,20 @@ function islandora_bagit_get_batch_members($islandora_object) {
     where  $object <fedora-rels-ext:isMemberOfCollection> <info:fedora/' . $islandora_object->id . '>';
   $members = $tuque->repository->ri->itqlQuery($ri_query, 'unlimited');
   foreach ($members as $member) {
-    $objects_to_bag[] = $member['object']['value'];
+    // Allow other modules to filter which objects get included in a batch.
+    // Implementations of hook_islandora_bagit_filter_batch($pid) must
+    // return TRUE if they want to filter out an object, FALSE otherwise.
+    $filter = module_invoke_all('islandora_bagit_filter_batch', $member['object']['value']);
+    // If any modules implement hook_islandora_bagit_filter_batch()...
+    if (count($filter)) {
+      if (!$filter[0]) {
+        $objects_to_bag[] = $member['object']['value'];
+      }
+    }
+    // If none do.
+    else {
+      $objects_to_bag[] = $member['object']['value'];
+    }
   }
 
   return $objects_to_bag;
