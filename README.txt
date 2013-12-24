@@ -39,34 +39,52 @@ To install the Islandora BagIt module:
 Extending and customizing the BagIt module
 ==========================================
 
-Files are added to an Islandora object's Bag by plugins. Plugins 1) define the
-source path for datastream files and their destination paths in the Bag relative
-to the Bag's 'data' directory, and 2) optionally, rename datastream files or
-create new files for inclusion in the Bag.
+Islandora BagIt uses two diffent types of plugins, object plugins and
+collection plugins.
 
-The module comes with four plugins, one that copies all the datastreams in
-an Islandora object in the top level of the Bag's 'data' directory, one that
+Object plugins add files to an Islandora object's Bag. Object plugins
+1) define the source path for datastream files and their destination paths
+in the Bag relative to the Bag's 'data' directory, and 2) optionally, 
+rename datastream files or create new files for inclusion in the Bag.
+
+The module comes with four object plugins, one that copies all the datastreams
+in an Islandora object in the top level of the Bag's 'data' directory, one that
 creates an Archivematica (http://archivematica.org) transfer Bag, one that
 illustrates how to create an additional file to add to the Bag, and one that
 exports the FOXML for an Islandora object.
 
-Multiple plugins may be activated, but they all add files to the same Bag.
-This means you can write a plugin that creates one specific file (for example)
-and activate it or deactivate it as needed. Plugins are fired in the order
-in which their filenames sort.
+Multiple object plugins may be activated, but they all add files to the same
+Bag. This means you can write a plugin that creates one specific file
+(for example) and activate it or deactivate it as needed. Plugins are fired
+in the order in which their filenames sort.
 
-If you have requirements not covered by the supplied plugins, you can use the 
-plugins described above to base your own on. If you write your own plugins, 
-follow these guidelines:
+If you have requirements not covered by the supplied object plugins, you can
+use the plugins described above to base your own on. If you write your own 
+plugins, follow these guidelines:
 
-a) Begin plugin filenames with 'plugin_' and end in '.inc'.
+a) Begin plugin filenames with 'plugin_object_' and end in '.inc'.
 b) Every plugin has a function that is named the same as the filename
    prepended with 'islandora_bagit_', ending in '_init().' All init functions 
    take $islandora_object and $tmp_ds_directory parameters.
 c) Plugins must complete all file writing and copying tasks before they return
-   the file's source and destination paths to the Bagit module (in the case of
-   datastream copy plugins).
+   the file's source and destination paths to the Bagit module.
 d) Plugins return FALSE if there is an error in copying or writing files.
+
+Collection plugins only apply to Bags that contain all the objects in a
+collecion. Whereas object plugins determine what goes in each object-level
+Bag, collection plugins determine how all the objects that are in a
+collection-level Bag are arranged in the Bag's 'data' directory.
+
+The requirements for collection plugins are the same as those for object plugins
+except for the requirement labelled a) above: collection plugin filenames being
+with 'plugin_collection_' instead of 'plugin_object_'.
+
+The module comes with two collection plugins, one that creates a directory for
+each object in the Bag's 'data' directory, and one that creates an 'odd' and
+and 'even' subdirectory in the Bag's 'data' directory, and then organizes 
+object-level Bags within those two subdirectories. The odd/even plugin is
+intended to illustrate alternative ways to organize objects within a collection
+Bag.
   
 Modifying a Bag from your own modules
 =====================================
