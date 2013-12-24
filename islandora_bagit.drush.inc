@@ -2,13 +2,18 @@
 
 /**
  * @file
- * Drush integration file for the Islandora BagIt module.
+ * Drush integration file for the Islandora BagIt module. Does not use
+ * the Drupal Batch API.
  *
  * Usage: drush --user=UID create-islandora-bag [object|collection] PID
  *   where UID is the user ID or user name of the fedoraAdmin user 
  *   (or equivalent), 'object' or 'collection' indicates whether you want to
  *   create a Bag for a single object or a Bag for every member of a
  *   collection, and PID is the PID of the Islandora object.
+ * 
+ * Note: If you want to create a single Bag containing all of the objects
+ * in a collection, you must use the 'Create Bag(s)' tab for the collection.
+ * This script only creates object-level Bags.
  */
 
 /**
@@ -67,9 +72,6 @@ function drush_islandora_bagit_create_islandora_bag($type = 'object', $pid = NUL
   // List of objects to create Bags for.
   $objects_to_bag = array();
 
-  // To create a Bag for every object in a collection, query the rindex to get all
-  // the objects that have a 'isMemberOfCollection' relationship with the specified
-  // collection and add all their PIDs to the list..
   if ($type == 'collection') {
     $collection_object = islandora_object_load($pid);
     $objects_to_bag = islandora_bagit_get_batch_members($collection_object);
@@ -89,7 +91,7 @@ function drush_islandora_bagit_create_islandora_bag($type = 'object', $pid = NUL
       $islandora_object = islandora_object_load($object_to_bag_pid);
       islandora_bagit_create_bag($islandora_object);
     }
-    catch (RepositoryException $e) {
+    catch (Exception $e) {
       drush_print("Sorry, Islandora cannot create the Bag: " . $e->getMessage());
     }
   }
