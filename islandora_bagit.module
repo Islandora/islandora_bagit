@@ -645,6 +645,10 @@ function islandora_bagit_process_collection_batch($pid, $num_objects, $tmp_ds_di
   // or FALSE if it doesn't want to create a file.
   $collection_plugins = variable_get('islandora_bagit_collection_plugins', array(''));
   $object_plugins = variable_get('islandora_bagit_object_plugins', array(''));
+  // Since $bag->addFile() is being called after we loop through all the object
+  // plugins, we need an array where we can accumulate the returned arrays from
+  // each plugin.
+  $all_files_to_add = array();
   foreach ($object_plugins as $object_plugin => $enabled) {
     if ($enabled) {
       module_load_include('inc', 'islandora_bagit', 'plugins/' . $object_plugin);
@@ -652,22 +656,23 @@ function islandora_bagit_process_collection_batch($pid, $num_objects, $tmp_ds_di
       // Process the object plugins.
       $files_to_add = $object_plugin_init_function($islandora_object, $tmp_ds_directory);
     }
+    $all_files_to_add = array_merge($all_files_to_add, $files_to_add);
   }
   
-  if (count($files_to_add)) {
+  if (count($all_files_to_add)) {
     // Pass $files_to_add from the object plugins to the collection plugins.
     foreach ($collection_plugins as $collection_plugin => $enabled) {
       if ($enabled) {
         module_load_include('inc', 'islandora_bagit', 'plugins/' . $collection_plugin);
         $collection_plugin_init_function = 'islandora_bagit_' . $collection_plugin . '_init';
-        $dest_path_to_add = $collection_plugin_init_function($islandora_object, $files_to_add, $tmp_ds_directory);
-        $files_to_add = $collection_plugin_init_function($islandora_object, $files_to_add, $tmp_ds_directory);
+        $dest_path_to_add = $collection_plugin_init_function($islandora_object, $all_files_to_add, $tmp_ds_directory);
+        $all_files_to_add = $collection_plugin_init_function($islandora_object, $all_files_to_add, $tmp_ds_directory);
       }
     }
     
     // Now that the collection plugins have been fired, update the Bag.
     $all_added_files = $_SESSION['islandora_bagit_all_added_files'];
-    foreach ($files_to_add as $file) {
+    foreach ($all_files_to_add as $file) {
       $bag->addFile($file['source'], $file['dest']);
       $all_added_files[] = $file['dest'];
     }
