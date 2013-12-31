@@ -891,8 +891,10 @@ function islandora_bagit_islandora_object_modified(FedoraObject $islandora_objec
  * multiple Bags being created on datastream modification.
  */
 function islandora_bagit_islandora_datastream_modified(AbstractObject $islandora_object, AbstractDatastream $datastream) {
-  if (variable_get('islandora_bagit_create_on_modify', 1)) {
-    $_SESSION['islandora_object'] = $islandora_object;
+  if (islandora_bagit_access_check($islandora_object)) {
+    if (variable_get('islandora_bagit_create_on_modify', 1)) {
+      $_SESSION['islandora_object'] = $islandora_object;
+    }
   }
 }
 
@@ -903,12 +905,10 @@ function islandora_bagit_islandora_datastream_modified(AbstractObject $islandora
  * definitions.
  */
 function islandora_bagit_create_bag_on_shutdown() {
-  if (islandora_bagit_access_check($islandora_object)) {
-    if (isset($_SESSION['islandora_object'])) {
-      islandora_bagit_create_bag($_SESSION['islandora_object']);
-      // Clear this variable in the session so the Bag isn't generated again.
-      unset($_SESSION['islandora_object']);
-    }
+  if (isset($_SESSION['islandora_object'])) {
+    islandora_bagit_create_bag($_SESSION['islandora_object']);
+    // Clear this variable in the session so the Bag isn't generated again.
+    unset($_SESSION['islandora_object']);
   }
 }
 
