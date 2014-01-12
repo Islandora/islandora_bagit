@@ -582,6 +582,12 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
   // the watchdog entries. This is populated in islandora_bagit_process_collection_batch().
   $_SESSION['islandora_bagit_all_added_files'] = array();
   
+  if (variable_get('islandora_bagit_payload_octetstream_sum', FALSE)) {
+    // Variables to hold the number of files in the batch bag and their summed size.
+    $_SESSION['islandora_bagit_batch_octetstream_sum_count'] = '0';
+    $_SESSION['islandora_bagit_batch_octetstream_sum_size'] = '0';
+  }
+  
   // Get list of all objects to include in this Bag.
   $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
   $num_objects = count($objects_to_include);
@@ -599,7 +605,8 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
   // We need the $pid in islandora_bagit_collection_batch_finish_bag().
   $_SESSION['islandora_bagit_collection_object_pid'] = $pid;
   
-  // Iterate through all the object to include and add them to the batch.
+  // Iterate through all the objects and create an entry in $operations
+  // for each one.
   foreach ($objects_to_include as $object_to_include_pid) {
     if (count($collection_plugins) && count($object_plugins)) {
       $operations[] = array('islandora_bagit_process_collection_batch', 
@@ -701,10 +708,18 @@ function islandora_bagit_process_collection_batch($pid, $num_objects, $tmp_ds_di
     foreach ($all_files_to_add as $file) {
       $bag->addFile($file['source'], $file['dest']);
       $all_added_files[] = $file['dest'];
+      
+      // Update the octetstream values for this batch Bag.
+      if (variable_get('islandora_bagit_payload_octetstream_sum', FALSE)) {
+        $_SESSION['islandora_bagit_batch_octetstream_sum_count']++;
+        $_SESSION['islandora_bagit_batch_octetstream_sum_size'] = $_SESSION['islandora_bagit_batch_octetstream_sum_size']
+            + filesize($file['source']);
+      }
     }
     $bag->update();
     $_SESSION['islandora_bagit_all_added_files'] = $all_added_files;
 
+    // Serialize the Bag object for later use.
     islandora_bagit_serialize_bag_object($bag, $pid, $tmp_ds_directory);
   }
 }
@@ -766,14 +781,18 @@ function islandora_bagit_collection_batch_finish_bag() {
   // Bag from the session so we can alter it, serialize it, et.
   $bag = islandora_bagit_unserialize_bag_object();
     
-  // Generate octetstream sum.
-  // @todo: This is broken ATM since $all_added_files doesn't
-  // contain the source file paths. See issue https://github.com/mjordan/islandora_bagit/issues/3
-  // if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
-    // $sum = islandora_bagit_get_octetstream_sum($all_added_files);
-    // $bag->setBagInfoData('Payload-Oxum', $sum);
-  // }
-
+  // Add octetstream sum and clean up the related session variables.
+  if (variable_get('islandora_bagit_payload_octetstream_sum', FALSE)) {
+    // Variables to hold the number of files in the batch bag and their summed size.
+    $octetstream_num_files = $_SESSION['islandora_bagit_batch_octetstream_sum_count'];
+    $octetstream_total_size = $_SESSION['islandora_bagit_batch_octetstream_sum_size'];
+    $bag->setBagInfoData('Payload-Oxum', $octetstream_total_size .
+      '.' . $octetstream_num_files);
+    $bag->update();
+    unset($_SESSION['islandora_bagit_batch_octetstream_sum_count']);
+    unset($_SESSION['islandora_bagit_batch_octetstream_sum_size']);
+  }
+  
   // Allow other modules to modify the Bag using 
   // mymodule_islandora_bagit_alter($bag, $islandora_object).
   drupal_alter('islandora_bagit', $bag, $islandora_object);
@@ -1002,7 +1021,9 @@ function islandora_bagit_unserialize_bag_object() {
 }
 
 /**
- * Generates the value for the Payload-Oxum metadata tag.
+ * Generates the value for the Payload-Oxum metadata tag for
+ * an object-level Bag. We generate this value for collection-
+ * level Bags in islandora_bagit_collection_batch_finish_bag().
  *
  * @param array $files
  *   Associative array of file info (with 'source' and 'dest'
