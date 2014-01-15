@@ -717,7 +717,7 @@ function islandora_bagit_process_collection_batch($pid, $num_objects, $tmp_ds_di
       }
     }
     $bag->update();
-    $_SESSION['islandora_bagit_all_added_files'] = $all_added_files;
+    $_SESSION['islandora_bagit_all_added_files'] = array_unique($all_added_files);
 
     // Serialize the Bag object for later use.
     islandora_bagit_serialize_bag_object($bag, $pid, $tmp_ds_directory);
