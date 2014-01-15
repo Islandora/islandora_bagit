@@ -80,7 +80,9 @@ function islandora_bagit_plugin_collection_basic_init($islandora_object, $files_
       $object_source_path = $object_tmp_dir . DIRECTORY_SEPARATOR . basename($file['source']);
       // Move the file from its current location in $tmp_ds_directory to its new
       // object-specific location in $object_tmp_dir.
-      rename($file['source'], $object_source_path);
+      if (file_exists($file['source'])) {
+        rename($file['source'], $object_source_path);
+      }
       // Modify the source and destination paths for each file so they can be
       // passed back to the main module to be added to the Bag.
       $file['source'] = $object_source_path;
