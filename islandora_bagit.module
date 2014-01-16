@@ -694,7 +694,14 @@ function islandora_bagit_process_collection_batch($pid, $num_objects, $tmp_ds_di
       // Process the object plugins.
       $files_to_add = $object_plugin_init_function($islandora_object, $tmp_ds_directory);
     }
-    $all_files_to_add = array_merge($all_files_to_add, $files_to_add);
+    if (count($files_to_add)) {
+      foreach ($files_to_add as $file_to_add) {      
+        if (!in_array($file_to_add, $all_files_to_add)) {
+          $all_files_to_add[] = $file_to_add;
+        }
+      }
+    }
+    // $all_files_to_add = array_merge($all_files_to_add, $files_to_add);
   }
   
   if (count($all_files_to_add)) {
@@ -958,19 +965,23 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
         $extension = $mime_detect->getExtension($ds->mimetype);
         $ds_content_file_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . $ds->id . '.' . 
           $extension;
-        // Only get the datastream if it doesn't already exist.
+        // Only get the datastream if its file doesn't already exist.
         if (!file_exists($ds_content_file_path)) {
           try {
             $ds->getContent($ds_content_file_path);
-            if (strlen($ds_content_file_path)) {
-              $ds_files[] = $ds_content_file_path;
-            }
           }
           catch (RepositoryException $e) {
             drupal_set_message(t('Cannot save datastream file.'), 'warning');
             watchdog('bagit', 'Could not save datastream file for datastream !dsid to !path.',
               WATCHDOG_WARNING, array('!dsid' => $id->id, '!path' => $ds_content_file_path));
-          }
+          }          
+        }
+        else {
+          // If the file already exists, add its path to the return array so it
+          // will be registered with the plugin.
+          if (strlen($ds_content_file_path)) {
+              $ds_files[] = $ds_content_file_path;
+          }            
         }
       }
     }

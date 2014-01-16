@@ -28,7 +28,7 @@ function islandora_bagit_plugin_object_ds_add_file_init($islandora_object, $tmp_
   $files_to_add = array();
   $ds_files = islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directory);
 
-  // Generate a file called foo.xml and it to the list of files that
+  // Generate a file called foo.xml and add it to the list of files that
   // should be added to the Bag. Adding this extra file is the only
   // difference between this plugin and plugin_copy_ds_basic.inc.
   $foo_file_contents = islandora_bagit_generate_foo_xml($ds_files);
