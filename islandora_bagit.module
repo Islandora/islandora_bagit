@@ -388,7 +388,7 @@ function islandora_bagit_create_bag($islandora_object) {
   else {
     drupal_set_message(t('There are no files to add to the Bag.'), 'warning');
     watchdog('bagit', 'BagIt Bag not created for !object: plugins found no files.',
-      WATCHDOG_WARNING, array('!object' => $islandora_object->id));
+      array('!object' => $islandora_object->id));
     return '';
   }
 
@@ -615,7 +615,7 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
     else {
       drupal_set_message(t('There are no files to add to the Bag.'), 'warning');
       watchdog('bagit', 'BagIt Bag not created for !object: plugins found no files.',
-        WATCHDOG_WARNING, array('!object' => $islandora_object->id));
+        array('!object' => $islandora_object->id));
       return '';
     }
   }
@@ -973,7 +973,7 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
           catch (RepositoryException $e) {
             drupal_set_message(t('Cannot save datastream file.'), 'warning');
             watchdog('bagit', 'Could not save datastream file for datastream !dsid to !path.',
-              WATCHDOG_WARNING, array('!dsid' => $id->id, '!path' => $ds_content_file_path));
+              array('!dsid' => $id->id, '!path' => $ds_content_file_path));
           }          
         }
         else {
