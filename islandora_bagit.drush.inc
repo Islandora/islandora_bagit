@@ -86,7 +86,7 @@ function drush_islandora_bagit_create_islandora_bag($type = 'object', $pid = NUL
     return FALSE;
   }
 
-  foreach ($objects_to_bag as $object_to_bag_pid) {    
+  foreach ($objects_to_bag as $object_to_bag_pid) {
     try {
       $islandora_object = islandora_object_load($object_to_bag_pid);
       islandora_bagit_create_bag($islandora_object);

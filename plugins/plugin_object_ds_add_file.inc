@@ -9,20 +9,20 @@
  *
  * Also registers all the datastreams in an Islandora object so they are
  * copied into the 'data' directory.
- *
  */
 
 /**
- * Returns an array of source and destination file paths. Returns FALSE if no 
- * datastream files are present.
+ * Returns an array of source and destination file paths.
  *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
  *
  * @param string $tmp_ds_directory
- *  The temporary directory where the datastream files have been downloaded.
+ *   The temporary directory where the datastream files have been downloaded.
  *
- * @return array or bool
+ * @return array|bool
+ *   An array of source and destination file paths, or FALSE
+ *   if no datastream files are present.
  */
 function islandora_bagit_plugin_object_ds_add_file_init($islandora_object, $tmp_ds_directory) {
   $files_to_add = array();
@@ -39,16 +39,17 @@ function islandora_bagit_plugin_object_ds_add_file_init($islandora_object, $tmp_
     'dest' => 'foo.xml',
   );
 
-  // Add file source and dest paths for each datastream to the $files_to_add array.
-  // $files_to_add['dest'] must be relative to the Bag's data subdirectory.
+  // Add file source and dest paths for each datastream to the $files_to_add
+  // array. $files_to_add['dest'] must be relative to the Bag's data
+  // subdirectory.
   foreach ($ds_files as $ds_filename) {
     // Add each file in the directory to $files_to_add.
     $source_file_to_add = $ds_filename;
     if (file_exists($source_file_to_add) && is_file($source_file_to_add)) {
       $files_to_add[] = array(
         'source' => $source_file_to_add,
-        // We use filename here since there are no subdirectories in in the Bag's 
-        // 'data' directory.
+        // We use filename here since there are no subdirectories in in the
+        // Bag's 'data' directory.
         'dest' => basename($ds_filename),
       );
     }
@@ -63,6 +64,8 @@ function islandora_bagit_plugin_object_ds_add_file_init($islandora_object, $tmp_
 }
 
 /**
+ * Generates the sample file we are including in the Bag.
+ *
  * Uses XMLWriter to generate foo.xml, which contains a simple
  * list of all the datastream files.
  *
@@ -70,6 +73,7 @@ function islandora_bagit_plugin_object_ds_add_file_init($islandora_object, $tmp_
  *   List of datastream files.
  *
  * @return string
+ *   The serialized XML file.
  */
 function islandora_bagit_generate_foo_xml($file_list) {
   $foo = new XMLWriter();
@@ -85,5 +89,3 @@ function islandora_bagit_generate_foo_xml($file_list) {
   $foo->endDocument();
   return $foo->outputMemory();
 }
-
-
