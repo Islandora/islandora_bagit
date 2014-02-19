@@ -38,8 +38,9 @@ function islandora_bagit_plugin_object_foxml_init($islandora_object, $tmp_ds_dir
     array(
       'format' => 'info:fedora/fedora-system:FOXML-1.1',
       'context' => 'archive',
-      'encoding' => 'UTF-8'),
-    );
+      'encoding' => 'UTF-8',
+    )
+  );
 
   $foxml_path = $tmp_ds_directory . DIRECTORY_SEPARATOR . 'foxml.xml';
   file_put_contents($foxml_path, $foxml);
