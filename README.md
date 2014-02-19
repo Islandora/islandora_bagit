@@ -85,7 +85,8 @@ Note that implementations of hook_islandora_bagit_alter() must call $bag->update
 
 If you are running a collection-level batch to create a Bag for every object in a collection, or to create a single Bag containing all objects in a collection, you can define filters on which objects get included using hook_islandora_bagit_filter_batch(). If you want an object to be excluded from the batch, have your instance of this hook return TRUE; if you want an object to be included, return FALSE (or don't issue an explicit 'return' at all). This example instance excludes objects with either of two specific PIDs:
 
-```/**
+```
+/**
  * Implementation of hook_islandora_bagit_filter_batch().
  *
  * @param string $pid
@@ -106,7 +107,8 @@ If you want to test other attributes of the object, you need to use Islandora's 
 
 Islandora BagIt provides an additional hook, islandora_bagit_post_create, that allows other modules to get notifications that a Bag has just been created. A basic implementation is:
 
-```/**
+```
+/**
  * Implements hook_islandora_bagit_post_create().
  *
  * @param string $pid
