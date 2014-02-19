@@ -1,5 +1,9 @@
 # Islandora BagIt
 
+## Build status
+
+[![Build Status](https://travis-ci.org/mjordan/islandora_bagit.png?branch=7.x)](https://travis-ci.org/mjordan/islandora_bagit)
+
 ## Introduction
 
 BagIt (https://wiki.ucop.edu/display/Curation/BagIt) is a specification for packaging content and metadata about that content into a format that can be shared between applications. This module provides a "Create Bag" option that allows the packaging of the datastreams in Islandora (http://islandora.ca/) objects. This module is a fork of https://drupal.org/project/bagit.
