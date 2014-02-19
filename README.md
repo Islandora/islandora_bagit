@@ -33,10 +33,10 @@ Multiple object plugins may be activated, but they all add files to the same Bag
 
 If you have requirements not covered by the supplied object plugins, you can use the plugins described above to base your own on. If you write your own plugins, follow these guidelines:
 
-a. Begin plugin filenames with 'plugin_object_' and end in '.inc'.
-b. Every plugin has a function that is named the same as the filename prepended with 'islandora_bagit_', ending in '_init().' All init functions take $islandora_object and $tmp_ds_directory parameters.
-c. Plugins must complete all file writing and copying tasks before they return the file's source and destination paths to the Bagit module.
-d. Plugins return FALSE if there is an error in copying or writing files.
+1. Begin plugin filenames with 'plugin_object_' and end in '.inc'.
+2. Every plugin has a function that is named the same as the filename prepended with 'islandora_bagit_', ending in '_init().' All init functions take $islandora_object and $tmp_ds_directory parameters.
+3. Plugins must complete all file writing and copying tasks before they return the file's source and destination paths to the Bagit module.
+4. Plugins return FALSE if there is an error in copying or writing files.
 
 Collection plugins only apply to Bags that contain all the objects in a collection. Whereas object plugins determine what goes in each object-level Bag, collection plugins determine how all the objects that are in a collection-level Bag are arranged in the Bag's 'data' directory. Also, you can only activate one collection plugin at a time, unlike object plugins.  
 
