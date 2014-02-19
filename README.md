@@ -10,16 +10,16 @@ This module uses the Scholars' Lab BagItPHP library, found at https://github.com
 
 To install the Islandora BagIt module:
 
-1) Install http://pear.php.net/package/Archive_Tar. This package is required by PEAR so if you have PEAR installed on your system, you won't need to install Archive_Tar separately.
-2) Install the Libraries API contrib module (http://drupal.org/project/libraries).
-3) Unzip this module into your site's modules directory as you would any other contrib module.
-4) Install the BagItPHP library by entering your site's sites/all/libraries directory and issuing the following command:
+1. Install http://pear.php.net/package/Archive_Tar. This package is required by PEAR so if you have PEAR installed on your system, you won't need to install Archive_Tar separately.
+2. Install the Libraries API contrib module (http://drupal.org/project/libraries).
+3. Unzip this module into your site's modules directory as you would any other contrib module.
+4. Install the BagItPHP library by entering your site's sites/all/libraries directory and issuing the following command:
 
    ```git clone git://github.com/scholarslab/BagItPHP.git```
 
-5) Enable the Libraries and Islandora BagIt modules like you would any other contrib modules.
-6) Configure the Islandora BagIt module by going to admin/islandora/bagit.
-7) Configure user permissions like you would for any other contrib module.
+5. Enable the Libraries and Islandora BagIt modules like you would any other contrib modules.
+6. Configure the Islandora BagIt module by going to admin/islandora/bagit.
+7. Configure user permissions like you would for any other contrib module.
 
 ## Extending and customizing the BagIt module
 
@@ -33,13 +33,10 @@ Multiple object plugins may be activated, but they all add files to the same Bag
 
 If you have requirements not covered by the supplied object plugins, you can use the plugins described above to base your own on. If you write your own plugins, follow these guidelines:
 
-a) Begin plugin filenames with 'plugin_object_' and end in '.inc'.
-b) Every plugin has a function that is named the same as the filename
-   prepended with 'islandora_bagit_', ending in '_init().' All init functions 
-   take $islandora_object and $tmp_ds_directory parameters.
-c) Plugins must complete all file writing and copying tasks before they return
-   the file's source and destination paths to the Bagit module.
-d) Plugins return FALSE if there is an error in copying or writing files.
+a. Begin plugin filenames with 'plugin_object_' and end in '.inc'.
+b. Every plugin has a function that is named the same as the filename prepended with 'islandora_bagit_', ending in '_init().' All init functions take $islandora_object and $tmp_ds_directory parameters.
+c. Plugins must complete all file writing and copying tasks before they return the file's source and destination paths to the Bagit module.
+d. Plugins return FALSE if there is an error in copying or writing files.
 
 Collection plugins only apply to Bags that contain all the objects in a collection. Whereas object plugins determine what goes in each object-level Bag, collection plugins determine how all the objects that are in a collection-level Bag are arranged in the Bag's 'data' directory. Also, you can only activate one collection plugin at a time, unlike object plugins.  
 
