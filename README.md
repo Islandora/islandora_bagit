@@ -10,19 +10,14 @@ This module uses the Scholars' Lab BagItPHP library, found at https://github.com
 
 To install the Islandora BagIt module:
 
-1) Install http://pear.php.net/package/Archive_Tar. This package is required by
-   PEAR so if you have PEAR installed on your system, you won't need to install
-   Archive_Tar separately.
+1) Install http://pear.php.net/package/Archive_Tar. This package is required by PEAR so if you have PEAR installed on your system, you won't need to install Archive_Tar separately.
 2) Install the Libraries API contrib module (http://drupal.org/project/libraries).
-3) Unzip this module into your site's modules directory as you would any other
-   contrib module.
-4) Install the BagItPHP library by entering your site's sites/all/libraries
-   directory and issuing the following command:
+3) Unzip this module into your site's modules directory as you would any other contrib module.
+4) Install the BagItPHP library by entering your site's sites/all/libraries directory and issuing the following command:
 
    ```git clone git://github.com/scholarslab/BagItPHP.git```
 
-5) Enable the Libraries and Islandora BagIt modules like you would any other 
-   contrib modules.
+5) Enable the Libraries and Islandora BagIt modules like you would any other contrib modules.
 6) Configure the Islandora BagIt module by going to admin/islandora/bagit.
 7) Configure user permissions like you would for any other contrib module.
 
@@ -138,7 +133,7 @@ This module is intended for users who have a fairly high level of permissions on
 
 ## Author/maintainer
 
-Mark Jordan <mjordan at sfu dot ca>
+Mark Jordan mjordan - sfu dot ca
 
 ## License
 
