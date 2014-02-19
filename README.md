@@ -56,7 +56,8 @@ The module comes with two collection plugins, one that creates a subdirectory fo
 
 This module provides a drupal_alter() hook, which allows other modules to use hook_islandora_bagit_alter($bag, $islandora_object). Your module can modify the current Bag using any of the methods provided by the BagItPHP library. Each implementation of this hook must take $bag and $islandora_object as parameters; $islandora_object is provided so you can access properties of the object in your module easily. A typical implementation looks like this:
 
-```/**
+```
+/**
  * Implementation of hook drupal_alter().
  *
  * @param object $bag
@@ -75,7 +76,8 @@ function mymodule_islandora_bagit_alter($bag, $islandora_object) {
   $bag->addFile('/path/to/file.txt', 'myfile.txt');
   // Update the Bag (this is required).
   $bag->update();
-}```
+}
+```
 
 Note that implementations of hook_islandora_bagit_alter() must call $bag->update() themselves, typically at the very end of the function.
 
@@ -95,7 +97,8 @@ function mymodule_islandora_bagit_filter_batch($pid) {
   if ($pid == 'islandora:87' || $pid == 'islandora:91') {
     return TRUE;
   }
-}```
+}
+```
 
 If you want to test other attributes of the object, you need to use Islandora's islandora_object_load($pid) function to load the object so you can access the attributes.
 
@@ -103,8 +106,7 @@ If you want to test other attributes of the object, you need to use Islandora's 
 
 Islandora BagIt provides an additional hook, islandora_bagit_post_create, that allows other modules to get notifications that a Bag has just been created. A basic implementation is:
 
-```
-/**
+```/**
  * Implements hook_islandora_bagit_post_create().
  *
  * @param string $pid
