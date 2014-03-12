@@ -103,7 +103,7 @@ function islandora_bagit_admin_settings() {
     '#type' => 'checkbox',
     '#title' => t('Delete unserialized (zipped) Bags.'),
     '#default_value' => variable_get('islandora_bagit_delete_unserialized_bag', 1),
-    '#description' => t('Check this option if you want to automatically delete 
+    '#description' => t('Check this option if you want to automatically delete
       unserialized Bags.'),
   );
 
@@ -251,7 +251,7 @@ function islandora_bagit_admin_settings() {
     '#title' => t('Contact name'),
     '#type' => 'textfield',
     '#size' => 60,
-    '#default_value' => variable_get('islandora_bagit_transferring_organization_address', ''),
+    '#default_value' => variable_get('islandora_bagit_contact_name', ''),
     '#description' => t("Person at the source organization who is responsible
       for the content transfer. Leave blank to omit from bag-info.txt."),
     '#maxlength' => 255,
@@ -662,7 +662,7 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
  *
  * @param string $pid
  *   The current object's PID.
- * 
+ *
  * @param string $num_objects
  *   The number of objects in this batch.
  *
@@ -784,7 +784,7 @@ function islandora_bagit_collection_batch_finished($success, $results, $operatio
  * https://drupal.org/node/638712. The  only way to get the code
  * in this function to fire is to call it in the batch's'finished'
  * callback.
- * 
+ *
  * return @array
  */
 function islandora_bagit_collection_batch_finish_bag() {
@@ -972,11 +972,11 @@ function islandora_bagit_create_bag_on_shutdown() {
  *
  * Iterates through the Islandora object, saves each specified datastream
  * as a file in a temporary directory using the DSID as the filename,
- * and returns a list of all the files saved. 
+ * and returns a list of all the files saved.
  *
  * @param object $islandora_object
  *   The Islandora object to create a Bag for.
- * 
+ *
  * @param array $datastreams
  *   List of DSIDs to retrieve. If empty, retrieve all datastreams.
  *
@@ -1024,14 +1024,14 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
  * 'incomplete object' errors. Note: This has nothing to do with
  * serializing (zipping) a Bag, it's a replacement for using Drupal's
  * $_SESSION.
- * 
+ *
  * @param object $bag
  *   The Bag object.
- * 
+ *
  * @param string $pid
  *   The PID of the collection object that the Bag is being created for.
  *   This PID should already be sanitized so that it can be used in file paths.
- * 
+ *
  * @param string $tmp_ds_directory
  *   The randomly-generated directory path to the temporary files used in
  *   creation of this Bag.
@@ -1053,7 +1053,7 @@ function islandora_bagit_serialize_bag_object($bag, $pid, $tmp_ds_directory) {
  * islandora_bagit_serialize_bag_object(). Note: The BagitPHP library
  * will need to be loaded in the scope that this function is called in,
  * otherwise we get fatal 'incomplete object' errors.
- * 
+ *
  * @return object
  *   The unserialized Bag object.
  */
@@ -1128,7 +1128,7 @@ function islandora_bagit_create_baginfo() {
  *
  * @param object $islandora_object
  *   The Islandora collection object to create the Bags for.
- * 
+ *
  * @return array
  *   List of PIDs.
  */
