@@ -2,7 +2,7 @@
 
 ## Build status
 
-[![Build Status](https://travis-ci.org/mjordan/islandora_bagit.png?branch=7.x)](https://travis-ci.org/mjordan/islandora_bagit)
+[![Build Status](https://travis-ci.org/Islandora/islandora_bagit.png?branch=7.x)](https://travis-ci.org/Islandora/islandora_bagit)
 
 ## Introduction
 
