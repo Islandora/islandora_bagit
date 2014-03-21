@@ -1,31 +1,39 @@
-# Islandora BagIt
-
-## Build status
-
-[![Build Status](https://travis-ci.org/Islandora/islandora_bagit.png?branch=7.x)](https://travis-ci.org/Islandora/islandora_bagit)
+# Islandora BagIt [![Build Status](https://travis-ci.org/Islandora/islandora_bagit.png?branch=7.x)](https://travis-ci.org/Islandora/islandora_bagit)
 
 ## Introduction
 
-BagIt (https://wiki.ucop.edu/display/Curation/BagIt) is a specification for packaging content and metadata about that content into a format that can be shared between applications. This module provides a "Create Bag" option that allows the packaging of the datastreams in Islandora (http://islandora.ca/) objects. This module is a fork of https://drupal.org/project/bagit.
+[BagIt](https://wiki.ucop.edu/display/Curation/BagIt) is a specification for packaging content and metadata about that content into a format that can be shared between applications. This module provides a "Create Bag" option that allows the packaging of the datastreams in [Islandora](http://islandora.ca/) objects. This module is a fork of [BagIt](https://drupal.org/project/bagit).
+
+## Requirements
+
+This module requires the following modules/libraries:
+
+* [Islandora](https://github.com/islandora/islandora)
+* [Tuque](https://github.com/islandora/tuque)
+* [Scholars' Lab BagItPHP library](https://github.com/scholarslab/BagItPHP)
+* [Archive_Tar](http://pear.php.net/package/Archive_Tar)
+* [Libraries](https://drupal.org/project/libraries)
 
 ## Installation
 
-This module uses the Scholars' Lab BagItPHP library, found at https://github.com/scholarslab/BagItPHP, which is integrated with the Islandora BagIt module using the Drupal Libraries API. The library has one PHP dependency, http://pear.php.net/package/Archive_Tar.
-
 To install the Islandora BagIt module:
 
-1. Install http://pear.php.net/package/Archive_Tar. This package is required by PEAR so if you have PEAR installed on your system, you won't need to install Archive_Tar separately.
-2. Install the Libraries API contrib module (http://drupal.org/project/libraries).
+1. Install [Archive_Tar](http://pear.php.net/package/Archive_Tar). This package is required by PEAR so if you have PEAR installed on your system, you won't need to install Archive_Tar separately.
+2. Install the [Libraries API](https://drupal.org/project/libraries) contrib module.
 3. Unzip this module into your site's modules directory as you would any other contrib module.
 4. Install the BagItPHP library by entering your site's sites/all/libraries directory and issuing the following command:
 
    ```git clone git://github.com/scholarslab/BagItPHP.git```
 
 5. Enable the Libraries and Islandora BagIt modules like you would any other contrib modules.
-6. Configure the Islandora BagIt module by going to admin/islandora/bagit.
-7. Configure user permissions like you would for any other contrib module.
 
-## Extending and customizing the BagIt module
+## Configuration
+
+Set the location for the BagIt library, temporary directory for unserialized Bags, output directory for serialized Bags, Bag name prefix, select Collection batch type, compression type, object plugins, collection plugins, and set Bag Metadata in Administration » Islandora » Islandora BagIt (admin/islandora/bagit).
+
+![Configure](http://i.imgur.com/tnvV288.png)
+
+### Extending and customizing the BagIt module
 
 Islandora BagIt uses two diffent types of plugins, object plugins and collection plugins.
 
@@ -48,7 +56,7 @@ The requirements for collection plugins are the same as those for object plugins
 
 The module comes with two collection plugins, one that creates a subdirectory for each object in the Bag's 'data' directory, and one that creates an 'odd' and 'even' subdirectory in the Bag's 'data' directory, and then organizes object-level Bags within those two subdirectories. The odd/even plugin is intended to illustrate alternative ways to organize objects within a collection Bag.
   
-## Modifying a Bag from your own modules
+### Modifying a Bag from your own modules
 
 This module provides a drupal_alter() hook, which allows other modules to use hook_islandora_bagit_alter($bag, $islandora_object). Your module can modify the current Bag using any of the methods provided by the BagItPHP library. Each implementation of this hook must take $bag and $islandora_object as parameters; $islandora_object is provided so you can access properties of the object in your module easily. A typical implementation looks like this:
 
@@ -99,7 +107,7 @@ function mymodule_islandora_bagit_filter_batch($pid) {
 
 If you want to test other attributes of the object, you need to use Islandora's islandora_object_load($pid) function to load the object so you can access the attributes.
 
-## Post-Bag-creation hook
+### Post-Bag-creation hook
 
 Islandora BagIt provides an additional hook, islandora_bagit_post_create, that allows other modules to get notifications that a Bag has just been created. A basic implementation is:
 
@@ -120,7 +128,7 @@ function mymodule_islandora_bagit_post_create($pid, $bag_path) {
 
 This hook can be used to send notification emails after a Bag has been created, to add the Bag to a queue for further processing, or to copy the Bag to a different server.
 
-## Drush integration
+### Drush integration
 
 Bags can be created for individual Islandora objects or for all objects in a given collection using Drush:
 
@@ -128,14 +136,27 @@ Bags can be created for individual Islandora objects or for all objects in a giv
 
 where UID is the user ID or user name of the fedoraAdmin user (or equivalent), 'object' or 'collection' indicates whether you want to create a Bag for a single object or a Bag for every member of a collection, and PID is the PID of the Islandora object or collection.
 
-## Permissions and security
+### Permissions and security
 
 This module is intended for users who have a fairly high level of permissions on a Drupal site. Because the goal is to package up all or some of the datastreams in an Islandora object, users who can create and download Bags should have access to those datastreams. However, the module does check the current users' access to a datastream before adding it to the Bag.
 
-## Author/maintainer
+## Troubleshooting/Issues
 
-Mark Jordan mjordan - sfu dot ca
+Having problems or solved a problem? Check out the Islandora google groups for a solution.
+
+* [Islandora Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora)
+* [Islandora Dev Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora-dev)
+
+## Maintainers/Sponsors
+
+Current maintainers:
+
+* [Mark Jordan](https://github.com/mjordan)
+
+## Development
+
+If you would like to contribute to this module, please check out our helpful [Documentation for Developers](https://github.com/Islandora/islandora/wiki#wiki-documentation-for-developers) info, as well as our [Developers](http://islandora.ca/developers) section on the Islandora.ca site.
 
 ## License
 
-Islandora BagIt is released under the GNU GENERAL PUBLIC LICENSE, version 3. See LICENSE.txt for more information.
+[GPLv3](http://www.gnu.org/licenses/gpl-3.0.txt)
