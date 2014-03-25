@@ -418,11 +418,12 @@ function islandora_bagit_create_bag($islandora_object) {
     rrmdir($bag_tmp_dir);
   }
 
-  // Clean up the temp director where we downloaded the datastreams.
+  // Clean up the temp directory where we downloaded the datastreams.
   if (file_exists($tmp_ds_directory)) {
     rrmdir($tmp_ds_directory);
   }
 
+  $all_added_files = array_unique($all_added_files);
   $serialized_all_added_files = implode(', ', $all_added_files);
   if (variable_get('islandora_bagit_log_bag_creation', 1)) {
     watchdog('islandora_bagit', 'Bag created for PID !pid (!files).',
@@ -491,7 +492,7 @@ function islandora_bagit_create_object_bag_batch($islandora_object) {
 
   batch_set($batch);
   // batch_process() is required if the batch is not initiated within a form
-  // handler. Paramter is the URL to redirect the user to, in this case, do
+  // handler. Parameter is the URL to redirect the user to, in this case, do
   // not redirect.
   batch_process('');
 }
@@ -1006,6 +1007,9 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
         if (!file_exists($ds_content_file_path)) {
           try {
             $ds->getContent($ds_content_file_path);
+            if (!in_array($ds_content_file_path, $ds_files)) {
+              $ds_files[] = $ds_content_file_path;
+            }
           }
           catch (RepositoryException $e) {
             drupal_set_message(t('Cannot save datastream file.'), 'warning');
@@ -1017,7 +1021,9 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
           // If the file already exists, add its path to the return array so it
           // will be registered with the plugin.
           if (strlen($ds_content_file_path)) {
-            $ds_files[] = $ds_content_file_path;
+            if (!in_array($ds_content_file_path, $ds_files)) {
+              $ds_files[] = $ds_content_file_path;
+            }
           }
         }
       }
