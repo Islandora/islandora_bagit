@@ -907,7 +907,10 @@ function islandora_bagit_collection_batch_finish_bag() {
 function islandora_bagit_islandora_object_ingested(FedoraObject $islandora_object) {
   if (islandora_bagit_access_check($islandora_object)) {
     if (variable_get('islandora_bagit_create_on_ingest', 1)) {
-      islandora_bagit_create_bag($islandora_object);
+      // Don't create a Bag if we are dealing with a collection.
+      if (!isset($islandora_object["COLLECTION_POLICY"])) {
+        islandora_bagit_create_bag($islandora_object);
+      }
     }
   }
 }
@@ -925,7 +928,10 @@ function islandora_bagit_islandora_object_ingested(FedoraObject $islandora_objec
 function islandora_bagit_islandora_object_modified(FedoraObject $islandora_object) {
   if (islandora_bagit_access_check($islandora_object)) {
     if (variable_get('islandora_bagit_create_on_modify', 1)) {
-      $_SESSION['islandora_object'] = $islandora_object;
+      // Don't create a Bag if we are dealing with a collection.
+      if (!isset($islandora_object["COLLECTION_POLICY"])) {
+        $_SESSION['islandora_object'] = $islandora_object;
+      }
     }
   }
 }
@@ -942,7 +948,10 @@ function islandora_bagit_islandora_object_modified(FedoraObject $islandora_objec
 function islandora_bagit_islandora_datastream_modified(AbstractObject $islandora_object, AbstractDatastream $datastream) {
   if (islandora_bagit_access_check($islandora_object)) {
     if (variable_get('islandora_bagit_create_on_modify', 1)) {
-      $_SESSION['islandora_object'] = $islandora_object;
+      // Don't create a Bag if we are dealing with a collection.
+      if (!isset($islandora_object["COLLECTION_POLICY"])) {
+        $_SESSION['islandora_object'] = $islandora_object;
+      }
     }
   }
 }
