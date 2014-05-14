@@ -53,7 +53,7 @@ function islandora_bagit_access_check($islandora_object) {
  */
 function islandora_bagit_menu() {
   $items = array();
-  $items['admin/islandora/bagit'] = array(
+  $items['admin/islandora/tools/bagit'] = array(
     'title' => 'Islandora BagIt',
     'description' => 'Configure Islandora BagIt.',
     'page callback' => 'drupal_get_form',

@@ -29,9 +29,9 @@ To install the Islandora BagIt module:
 
 ## Configuration
 
-Set the location for the BagIt library, temporary directory for unserialized Bags, output directory for serialized Bags, Bag name prefix, select Collection batch type, compression type, object plugins, collection plugins, and set Bag Metadata in Administration » Islandora » Islandora BagIt (admin/islandora/bagit).
+Set the location for the BagIt library, temporary directory for unserialized Bags, output directory for serialized Bags, Bag name prefix, select Collection batch type, compression type, object plugins, collection plugins, and set Bag Metadata in Administration » Islandora » Islandora Utility Modules » Islandora BagIt (admin/islandora/tools/bagit).
 
-![Configure](http://i.imgur.com/tnvV288.png)
+![Configure](https://camo.githubusercontent.com/5b4af3493616372b248d749b8660af27a3479d78/687474703a2f2f692e696d6775722e636f6d2f746e76563238382e706e67)
 
 ### Extending and customizing the BagIt module
 
