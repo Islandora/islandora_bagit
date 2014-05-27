@@ -997,7 +997,7 @@ function islandora_bagit_retrieve_datastreams($islandora_object, $tmp_ds_directo
   $ds_files = array();
   $mime_detect = new MimeDetect();
   foreach ($islandora_object as $ds) {
-    if (islandora_datastream_access(FEDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
+    if (islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object[$ds->id])) {
       // If $datastreams is empty, retrieve all datastreams.
       if ((count($datastreams) == 0) || in_array($ds->id, $datastreams)) {
         $extension = $mime_detect->getExtension($ds->mimetype);
