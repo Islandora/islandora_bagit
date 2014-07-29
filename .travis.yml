@@ -26,3 +26,5 @@ script:
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer islandora_bagit
   - phpcpd --names *.module,*.inc,*.test sites/all/modules/islandora_bagit
   - drush test-run --uri=http://localhost:8081 "Islandora BagIt"
+notifications:
+  irc: "irc.freenode.org#islandora"
