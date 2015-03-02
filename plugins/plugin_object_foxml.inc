@@ -37,7 +37,7 @@ function islandora_bagit_plugin_object_foxml_init($islandora_object, $tmp_ds_dir
   $foxml = $connection->api->m->export($islandora_object->id,
     array(
       'format' => 'info:fedora/fedora-system:FOXML-1.1',
-      'context' => 'archive',
+      'context' => 'migrate',
       'encoding' => 'UTF-8',
     )
   );
