@@ -34,6 +34,11 @@ function islandora_bagit_plugin_object_foxml_init($islandora_object, $tmp_ds_dir
   global $user;
   $fedora_url = variable_get('islandora_base_url', 'http://localhost:8080/fedora');
   $connection = islandora_get_tuque_connection($user, $fedora_url);
+  // Export the FOXML. Documentation on the 'context' parameter is available at
+  // https://wiki.duraspace.org/display/FEDORA37/REST+API#RESTAPI-export.
+  // Note: Using the 'archive' context with Fedora up to and including version
+  // 3.8.0 is not recommended due to
+  // https://jira.duraspace.org/browse/FCREPO-1384.
   $foxml = $connection->api->m->export($islandora_object->id,
     array(
       'format' => 'info:fedora/fedora-system:FOXML-1.1',
