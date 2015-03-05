@@ -140,6 +140,10 @@ where UID is the user ID or user name of the fedoraAdmin user (or equivalent), '
 
 This module is intended for users who have a fairly high level of permissions on a Drupal site. Because the goal is to package up all or some of the datastreams in an Islandora object, users who can create and download Bags should have access to those datastreams. However, the module does check the current users' access to a datastream before adding it to the Bag.
 
+## Known Issues
+
+Fedora 3.8.0 fails to generate FOXML files requested using the 'archive' context ([JIRA ticket](https://jira.duraspace.org/browse/FCREPO-1384)). Earlier versions may succeed on exporting 'archive' FOXML files if the resulting FOXML is smaller than approximately 200 MB, but fail on larger files. The Islandora BagIt module triggers this set of errors if 'archive' FOXML files are generated from within one of its plugins ([JIRA ticket](https://jira.duraspace.org/browse/ISLANDORA-1193)). Until this issue is resolved in Fedora, users of the Islandora BagIt module should not use plugins that generate 'archive' FOXML, including plugin_object_foxml.inc distributed with versions of Islandora BagIt prior to 7.x-1.5. The other FOXML export contexts, 'public' and 'migrate' ([documentation](https://wiki.duraspace.org/display/FEDORA37/REST+API#RESTAPI-export)), can be used safely.
+
 ## Troubleshooting/Issues
 
 Having problems or solved a problem? Check out the Islandora google groups for a solution.
