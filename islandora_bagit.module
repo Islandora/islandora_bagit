@@ -938,7 +938,7 @@ function islandora_bagit_islandora_object_modified(FedoraObject $islandora_objec
 }
 
 /**
- * Implements hook_islandora_datastream_alter().
+ * Implements hook_islandora_datastream_modified().
  *
  * Fired when the properties or content of any datastream are about
  * to be modified.
@@ -947,6 +947,34 @@ function islandora_bagit_islandora_object_modified(FedoraObject $islandora_objec
  * multiple Bags being created on datastream modification.
  */
 function islandora_bagit_islandora_datastream_modified(AbstractObject $islandora_object, AbstractDatastream $datastream) {
+  if (islandora_bagit_access_check($islandora_object)) {
+    if (variable_get('islandora_bagit_create_on_modify', 0)) {
+      // Don't create a Bag if we are dealing with a collection.
+      if (!isset($islandora_object["COLLECTION_POLICY"])) {
+        $_SESSION['islandora_object'] = $islandora_object;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_islandora_datastream_modified().
+ */
+function islandora_bagit_islandora_datastream_ingested(AbstractObject $islandora_object, AbstractDatastream $datastream) {
+  if (islandora_bagit_access_check($islandora_object)) {
+    if (variable_get('islandora_bagit_create_on_modify', 0)) {
+      // Don't create a Bag if we are dealing with a collection.
+      if (!isset($islandora_object["COLLECTION_POLICY"])) {
+        $_SESSION['islandora_object'] = $islandora_object;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_islandora_datastream_purged().
+ */
+function islandora_bagit_islandora_datastream_purged(AbstractObject $islandora_object, $dsid) {
   if (islandora_bagit_access_check($islandora_object)) {
     if (variable_get('islandora_bagit_create_on_modify', 0)) {
       // Don't create a Bag if we are dealing with a collection.
