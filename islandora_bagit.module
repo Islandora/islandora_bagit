@@ -5,13 +5,15 @@
  * Module to create BagIt Bags from Islandora objects. Requires the library at
  * https://github.com/scholarslab/BagItPHP. Consult the README.txt for
  * instructions.
- * instructions.
  */
 
 /**
  * Implements hook_init().
  */
 function islandora_bagit_init() {
+  if (isset($_SESSION['islandora_object'])) {
+    unset($_SESSION['islandora_object']);
+  }
   drupal_register_shutdown_function('islandora_bagit_create_bag_on_shutdown');
 }
 
