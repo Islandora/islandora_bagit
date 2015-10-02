@@ -6,11 +6,11 @@
  * the Drupal Batch API.
  *
  * Usage: drush --user=UID create-islandora-bag [object|collection] PID
- *   where UID is the user ID or user name of the fedoraAdmin user 
+ *   where UID is the user ID or user name of the fedoraAdmin user
  *   (or equivalent), 'object' or 'collection' indicates whether you want to
  *   create a Bag for a single object or a Bag for every member of a
  *   collection, and PID is the PID of the Islandora object.
- * 
+ *
  * Note: If you want to create a single Bag containing all of the objects
  * in a collection, you must use the 'Create Bag(s)' tab for the collection.
  * This script only creates object-level Bags.
@@ -49,7 +49,7 @@ function islandora_bagit_drush_command() {
 }
 
 /**
- * Callback function for drush create-islandora-bag. 
+ * Callback function for drush create-islandora-bag.
  *
  * @param string $type
  *   Either 'object' (for a single Islandora object) or 'collection'
