@@ -1185,9 +1185,14 @@ function islandora_bagit_get_batch_members($islandora_object) {
   // relationship with the specified collection and add all their PIDs to the
   // list.
   $tuque = islandora_get_tuque_connection();
-  $ri_query = 'select $object from <#ri>
-    where  $object <fedora-rels-ext:isMemberOfCollection> <info:fedora/' . $islandora_object->id . '>';
-  $members = $tuque->repository->ri->itqlQuery($ri_query, 'unlimited');
+  $ri_query = <<<EOQ
+SELECT ?object
+FROM <#ri>
+WHERE {
+  ?object <fedora-rels-ext:isMemberOfCollection> <info:fedora/{$islandora_object->id}>
+}
+EOQ;
+  $members = $tuque->repository->ri->sparqlQuery($ri_query, 'unlimited');
   foreach ($members as $member) {
     // Allow other modules to filter which objects get included in a batch.
     // Implementations of hook_islandora_bagit_filter_batch($pid) must
