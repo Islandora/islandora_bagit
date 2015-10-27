@@ -4,7 +4,7 @@
  * @file
  * Plugin for the Islandora BagIt Drupal module.
  *
- * Creates Bags compatible with Archivematica (http://archivematica.org) 
+ * Creates Bags compatible with Archivematica (http://archivematica.org)
  * transfer Bags by creating 'metadata' and 'objects' subdirectories, then
  * moving the DC datastream into the 'metadata' directory and the OBJ datastream
  * into the 'objects' directory.
