@@ -34,6 +34,6 @@ script:
   - $ISLANDORA_DIR/tests/scripts/line_endings.sh sites/all/modules/islandora_bagit
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer islandora_bagit
   - phpcpd --names *.module,*.inc,*.test sites/all/modules/islandora_bagit
-  - php scripts/run-tests.sh --php `phpenv which php` --url http://localhost:8081 --class islandora_premis
+  - php scripts/run-tests.sh --php `phpenv which php` --url http://localhost:8081 --verbose --class islandora_premis
 notifications:
   irc: "irc.freenode.org#islandora"
