@@ -43,11 +43,8 @@ function islandora_bagit_permission() {
  *   TRUE if user has access, FALSE if not.
  */
 function islandora_bagit_access_check($islandora_object) {
-  // First, check the user's privileges.
-  if (!user_access('create Islandora Bags')) {
-    return FALSE;
-  }
-  return TRUE;
+  return islandora_object_access('create Islandora Bags', $islandora_object);
+
 }
 
 /**
