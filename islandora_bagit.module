@@ -832,8 +832,8 @@ function islandora_bagit_collection_batch_finish_bag() {
 
     if (variable_get('islandora_bagit_show_messages', 1)) {
       $serialized_bag_path .= '.' . $compression_type;
-      drupal_set_message(t("Serialized collection Bag created and saved at %path", array(
-        '%path' => $serialized_bag_path,
+      drupal_set_message(t('Serialized collection Bag created and saved at <a href="/@path">@path</a>', array(
+        '@path' => $serialized_bag_path,
       )));
     }
 
