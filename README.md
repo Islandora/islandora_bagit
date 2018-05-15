@@ -146,6 +146,8 @@ Fedora 3.8.0 fails to generate FOXML files requested using the 'archive' context
 
 Some bags do not finish properly even with PHP CLI's php.ini set to ```max_input_time = -1``` ([JIRA ticket](https://jira.duraspace.org/browse/ISLANDORA-1403)). For better performance the CLI's php.ini should have the lines ```max_execution_time = 0``` and ```man_input_time = -1```, and well as including ```Timeout 86400``` in Apache2's apache2.conf.
 
+During object ingest this module will create a new bag for each derivative as it is created. This can be resource-intensive during batch ingests. A work around is to use the drush command ```drush vset islandora_bagit_create_on_modify '0'``` to turn off bag creation on modification. ([JIRA ticket](https://jira.duraspace.org/browse/ISLANDORA-1381))
+
 ## Documentation
 
 Further documentation for this module is available at [our wiki](https://wiki.duraspace.org/display/ISLANDORA/Islandora+BagIt).
