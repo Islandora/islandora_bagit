@@ -1,6 +1,6 @@
 name = Islandora BagIt
 description = Creats BagIt Bags from Islandora objects.
-version = 7.x-1.11RC1
+version = 7.x-1.11
 core = 7.x
 package = Islandora Tools
 dependencies[] = libraries
