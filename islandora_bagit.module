@@ -314,6 +314,20 @@ function islandora_bagit_admin_settings() {
 function islandora_bagit_create_bag($islandora_object) {
   // First, check to see if the object is a collection, and if it is,
   // reroute to the relevant batch function.
+  foreach ($islandora_object as $ds) {
+    if ($ds->id == 'COLLECTION_POLICY') {
+      if (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'object') {
+        islandora_bagit_create_object_bag_batch($islandora_object);
+      }
+      elseif (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'collection') {
+        islandora_bagit_create_collection_bag_batch($islandora_object);
+      }
+      elseif (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'no_children') {
+        break;
+      }
+      return array();
+    }
+  }
 
   // Sanitize the PID so it is usable in file paths.
   $pid = str_replace(array(':', '-'), '_', $islandora_object->id);
@@ -353,22 +367,6 @@ function islandora_bagit_create_bag($islandora_object) {
 
   // Create a new bag.
   $bag = new BagIt($bag_output_path, TRUE, TRUE, FALSE, $bag_info);
-
-  foreach ($islandora_object as $ds) {
-    if ($ds->id == 'COLLECTION_POLICY') {
-      if (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'object') {
-        islandora_bagit_create_object_bag_batch($islandora_object);
-      }
-      elseif (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'collection') {
-        islandora_bagit_create_collection_bag_batch($islandora_object);
-      }
-      elseif (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'no_children') {
-        break;
-      }
-      return array();
-    }
-  }
-
 
   // Iterate through all the object plugins. Each plugin must return the
   // parameters required for addFile() (i.e., a list of file source and
@@ -476,6 +474,7 @@ function islandora_bagit_create_bag($islandora_object) {
  */
 function islandora_bagit_create_object_bag_batch($islandora_object) {
   $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
+  $objects_to_include[] = $islandora_object->id;
   $num_objects = count($objects_to_include);
   $operations = array();
 
@@ -610,6 +609,7 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
 
   // Get list of all objects to include in this Bag.
   $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
+  $objects_to_include[] = $islandora_object->id;
   $num_objects = count($objects_to_include);
   $operations = array();
 
