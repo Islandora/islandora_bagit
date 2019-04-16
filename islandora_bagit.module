@@ -151,6 +151,7 @@ function islandora_bagit_admin_settings() {
     '#options' => array(
       'object' => t('one Bag per object'),
       'collection' => t('one Bag per collection'),
+      'no_children' => t('the Collection object only; children will not be bagged'),
     ),
     '#description' => t('Choose whether collection-level batches create one Bag per object or one Bag per collection.'),
   );
@@ -318,8 +319,11 @@ function islandora_bagit_create_bag($islandora_object) {
       if (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'object') {
         islandora_bagit_create_object_bag_batch($islandora_object);
       }
-      if (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'collection') {
+      elseif (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'collection') {
         islandora_bagit_create_collection_bag_batch($islandora_object);
+      }
+      elseif (variable_get('islandora_bagit_multiple_bag_type', 'object') == 'no_children') {
+        break;
       }
       return array();
     }
@@ -470,6 +474,7 @@ function islandora_bagit_create_bag($islandora_object) {
  */
 function islandora_bagit_create_object_bag_batch($islandora_object) {
   $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
+  $objects_to_include[] = $islandora_object->id;
   $num_objects = count($objects_to_include);
   $operations = array();
 
@@ -604,6 +609,7 @@ function islandora_bagit_create_collection_bag_batch($islandora_object) {
 
   // Get list of all objects to include in this Bag.
   $objects_to_include = islandora_bagit_get_batch_members($islandora_object);
+  $objects_to_include[] = $islandora_object->id;
   $num_objects = count($objects_to_include);
   $operations = array();
 
