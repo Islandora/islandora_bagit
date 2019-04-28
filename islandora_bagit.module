@@ -372,6 +372,7 @@ function islandora_bagit_create_bag($islandora_object) {
   // parameters required for addFile() (i.e., a list of file source and
   // destination paths) or FALSE if it doesn't want to create a file.
   $plugins = variable_get('islandora_bagit_object_plugins', array(''));
+  $files_to_add = array();
   if (count($plugins)) {
     foreach ($plugins as $plugin => $enabled) {
       if ($enabled) {
@@ -379,17 +380,17 @@ function islandora_bagit_create_bag($islandora_object) {
         $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
         // Process the plugins.
         if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
-          // Generate octetstream sum.
-          if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
-            $sum = islandora_bagit_get_octetstream_sum($files_to_add);
-            $bag->setBagInfoData('Payload-Oxum', $sum);
-          }
           foreach ($files_to_add as $file) {
             $bag->addFile($file['source'], $file['dest']);
             $all_added_files[] = $file['dest'];
           }
         }
       }
+    }
+    // Generate octetstream sum.
+    if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
+      $sum = islandora_bagit_get_octetstream_sum($files_to_add);
+      $bag->setBagInfoData('Payload-Oxum', $sum);
     }
     $bag->update();
   }
