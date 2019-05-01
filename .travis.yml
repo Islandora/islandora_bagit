@@ -33,6 +33,7 @@ branches:
   only:
     - /^7.x/
 before_install:
+  - if [[ $(phpenv version-name) = "5.3.3" ]]; then composer config -g -- disable-tls true && composer config -g -- secure-http false; fi;
   - cd $HOME
   - git clone -b 7.x git://github.com/Islandora/islandora.git
   - git clone -b 7.x git://github.com/Islandora/islandora_solution_pack_collection.git
