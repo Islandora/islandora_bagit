@@ -17,6 +17,19 @@ matrix:
     - php: 5.3.3
       dist: precise
       env: FEDORA_VERSION="3.8.1"
+  allow_failures:
+    - php: 5.3.3
+      dist: precise
+      env: FEDORA_VERSION="3.5"
+    - php: 5.3.3
+      dist: precise
+      env: FEDORA_VERSION="3.6.2"
+    - php: 5.3.3
+      dist: precise
+      env: FEDORA_VERSION="3.7.0"
+    - php: 5.3.3
+      dist: precise
+      env: FEDORA_VERSION="3.8.1"
 php:
   - 5.4
   - 5.5
@@ -33,7 +46,6 @@ branches:
   only:
     - /^7.x/
 before_install:
-  - if [[ $(phpenv version-name) = "5.3.3" ]]; then composer config -g -- disable-tls true && composer config -g -- secure-http false; fi;
   - cd $HOME
   - git clone -b 7.x git://github.com/Islandora/islandora.git
   - git clone -b 7.x git://github.com/Islandora/islandora_solution_pack_collection.git
