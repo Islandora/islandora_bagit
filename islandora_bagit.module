@@ -361,6 +361,8 @@ function islandora_bagit_create_bag($islandora_object) {
   // A list of all the files added to the bag, to show the user and add to
   // the watchdog entries.
   $all_added_files = array();
+  // Needed for islandora_bagit_get_octetstream_sum().
+  $all_added_files_sources = array();
 
   // Get bag-info.txt metadata.
   $bag_info = islandora_bagit_create_baginfo();
@@ -372,6 +374,7 @@ function islandora_bagit_create_bag($islandora_object) {
   // parameters required for addFile() (i.e., a list of file source and
   // destination paths) or FALSE if it doesn't want to create a file.
   $plugins = variable_get('islandora_bagit_object_plugins', array(''));
+  $files_to_add = array();
   if (count($plugins)) {
     foreach ($plugins as $plugin => $enabled) {
       if ($enabled) {
@@ -379,17 +382,18 @@ function islandora_bagit_create_bag($islandora_object) {
         $plugin_init_function = 'islandora_bagit_' . $plugin . '_init';
         // Process the plugins.
         if ($files_to_add = $plugin_init_function($islandora_object, $tmp_ds_directory)) {
-          // Generate octetstream sum.
-          if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
-            $sum = islandora_bagit_get_octetstream_sum($files_to_add);
-            $bag->setBagInfoData('Payload-Oxum', $sum);
-          }
           foreach ($files_to_add as $file) {
             $bag->addFile($file['source'], $file['dest']);
             $all_added_files[] = $file['dest'];
+            $all_added_files_sources[] = $file['source'];
           }
         }
       }
+    }
+    // Generate octetstream sum.
+    if (variable_get('islandora_bagit_payload_octetstream_sum', 0)) {
+      $sum = islandora_bagit_get_octetstream_sum($all_added_files_sources);
+      $bag->setBagInfoData('Payload-Oxum', $sum);
     }
     $bag->update();
   }
@@ -1121,8 +1125,7 @@ function islandora_bagit_unserialize_bag_object() {
  * level Bags in islandora_bagit_collection_batch_finish_bag().
  *
  * @param array $files
- *   Associative array of file info (with 'source' and 'dest'
- *   keys) returned by a plugins.
+ *   Array of source paths for files added to the Bag.
  *
  * @return string
  *   The Payload-Oxum value.
@@ -1132,7 +1135,7 @@ function islandora_bagit_get_octetstream_sum($files) {
   $filesize_sum = 0;
   foreach ($files as $file) {
     $file_counter++;
-    $filesize_sum = filesize($file['source']) + $filesize_sum;
+    $filesize_sum = $filesize_sum + filesize($file);
   }
   return $filesize_sum . '.' . $file_counter;
 }
