@@ -1135,7 +1135,7 @@ function islandora_bagit_get_octetstream_sum($files) {
   $filesize_sum = 0;
   foreach ($files as $file) {
     $file_counter++;
-    $filesize_sum = $filesize_sum + filesize($file);
+    $filesize_sum = $filesize_sum + (int) filesize($file);
   }
   return $filesize_sum . '.' . $file_counter;
 }
