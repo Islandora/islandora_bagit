@@ -412,6 +412,11 @@ function islandora_bagit_create_bag($islandora_object) {
   $serialized_bag_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
     DIRECTORY_SEPARATOR . $bag_file_name;
   $compression_type = variable_get('islandora_bagit_compression_type', 'tgz');
+
+  if (file_exists($serialized_bag_path . '.' . $compression_type)) {
+    unlink($serialized_bag_path . '.' . $compression_type);
+  }
+
   $bag->package($serialized_bag_path, $compression_type);
 
   if (variable_get('islandora_bagit_delete_unserialized_bag', 1)) {
@@ -438,6 +443,7 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   $serialized_bag_path .= '.' . $compression_type;
+
   if (variable_get('islandora_bagit_show_messages', 1)) {
     drupal_set_message(t("Bag created and saved at %path", array(
       '%path' => $serialized_bag_path,
