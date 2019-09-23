@@ -214,8 +214,6 @@ function islandora_bagit_admin_settings() {
     )),
     '#description' => t("Object-level plugins. Plugins are fired in their order in this list and all add files to the same Bag. You should choose at least one plugin."),
   );
-  $testvar = variable_get('islandora_bagit_object_plugins');
-  dd($testvar);
   $collection_plugins = islandora_bagit_get_plugins('collection');
   foreach ($collection_plugins as $plugin) {
     $collection_plugin_options[$plugin] = $plugin;
