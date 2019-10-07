@@ -209,10 +209,11 @@ function islandora_bagit_admin_settings() {
     '#title' => t('Object plugins'),
     '#type' => 'checkboxes',
     '#options' => $object_plugin_options,
-    '#default_value' => variable_get('islandora_bagit_object_plugins', array('')),
+    '#default_value' => variable_get('islandora_bagit_object_plugins', array(
+      'plugin_object_ds_basic' => 'plugin_object_ds_basic',
+    )),
     '#description' => t("Object-level plugins. Plugins are fired in their order in this list and all add files to the same Bag. You should choose at least one plugin."),
   );
-
   $collection_plugins = islandora_bagit_get_plugins('collection');
   foreach ($collection_plugins as $plugin) {
     $collection_plugin_options[$plugin] = $plugin;
