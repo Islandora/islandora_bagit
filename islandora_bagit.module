@@ -313,6 +313,13 @@ function islandora_bagit_admin_settings() {
  *   a link to 'Download the Bag.'
  */
 function islandora_bagit_create_bag($islandora_object) {
+  $bag_output_dir = variable_get('islandora_bagit_bag_output_dir', '/tmp');
+  if (!file_exists($bag_output_dir)) {
+    drupal_set_message(t('There is no output Bag directory.'), 'warning');
+    watchdog('bagit', 'BagIt Bag not created for !object: output directory missing.',
+      array('!object' => $islandora_object->id));
+    throw new Exception('Missing output bag directory '.$bag_output_dir);
+  }
   // First, check to see if the object is a collection, and if it is,
   // reroute to the relevant batch function.
   foreach ($islandora_object as $ds) {
@@ -349,7 +356,7 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   $bag_file_name = variable_get('islandora_bagit_bag_name', 'Bag-') . $pid;
-  $bag_output_path = variable_get('islandora_bagit_bag_output_dir', '/tmp') .
+  $bag_output_path = $bag_output_dir .
     DIRECTORY_SEPARATOR . $bag_file_name;
 
   // Because the BagItPHP library does some things by default if the bag output
