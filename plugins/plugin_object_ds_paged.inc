@@ -23,7 +23,11 @@
  */
 function islandora_bagit_plugin_object_ds_paged_init($islandora_object, $tmp_ds_directory) {
   // What Content Models have pages?
-  $supported_cmodels = array('islandora:manuscriptCModel','islandora:bookCModel','islandora:newspaperIssueCModel');
+  $supported_cmodels = array(
+    'islandora:manuscriptCModel',
+    'islandora:bookCModel',
+    'islandora:newspaperIssueCModel'
+  );
   $found_cmodels = array_intersect($islandora_object->models, $supported_cmodels);
   if (empty($found_cmodels)) {
     return FALSE;
