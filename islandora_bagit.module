@@ -318,7 +318,7 @@ function islandora_bagit_create_bag($islandora_object) {
     drupal_set_message(t('There is no output Bag directory.'), 'warning');
     watchdog('bagit', 'BagIt Bag not created for !object: output directory missing.',
       array('!object' => $islandora_object->id));
-    throw new Exception('Missing output bag directory '.$bag_output_dir);
+    throw new Exception('Missing output bag directory ' . $bag_output_dir);
   }
   // First, check to see if the object is a collection, and if it is,
   // reroute to the relevant batch function.
