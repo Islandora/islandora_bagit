@@ -888,10 +888,10 @@ function islandora_bagit_collection_batch_finish_bag() {
 
   // Allow other modules to fire the post-Bag creation hook.
   if (variable_get('islandora_bagit_serialize_collection_bags', 0)) {
-    $post_create_data = module_invoke_all('islandora_bagit_post_create', $pid, $serialized_bag_path);
+    $post_create_data = module_invoke_all('islandora_bagit_post_create', $islandora_object->id, $serialized_bag_path);
   }
   else {
-    $post_create_data = module_invoke_all('islandora_bagit_post_create', $pid, $bag_output_path);
+    $post_create_data = module_invoke_all('islandora_bagit_post_create', $islandora_object->id, $bag_output_path);
   }
 
   if (variable_get('islandora_bagit_provide_download_link', 1) && variable_get('islandora_bagit_serialize_collection_bags', 0)) {
