@@ -331,8 +331,8 @@ function islandora_bagit_create_bag($islandora_object) {
   }
 
   // Sanitize the PID so it is usable in file paths.
-  $pid = str_replace(array(':', '-'), '_', $islandora_object->id);
-
+  // $pid = str_replace(array(':', '-'), '_', $islandora_object->id);
+  $pid = $islandora_object->id;
   // Save all the datastreams to a randomly named temporary directory so
   // they can be added to the Bag. We delete these files after creating the Bag.
   $random_string = substr(md5(rand()), 0, 7);
