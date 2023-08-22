@@ -136,6 +136,8 @@ Bags can be created for individual Islandora objects or for all objects in a giv
 
 where UID is the user ID or user name of the fedoraAdmin user (or equivalent), 'object' or 'collection' indicates whether you want to create a Bag for a single object or a Bag for every member of a collection, and PID is the PID of the Islandora object or collection.
 
+By default, the `create-islandora-bag` command will overwrite existing bags with the same name.  An option `--resume` is available which will instead accept the existing bags as-is, and resume processing with the next incomplete bag.
+
 ### Permissions and security
 
 This module is intended for users who have a fairly high level of permissions on a Drupal site. Because the goal is to package up all or some of the datastreams in an Islandora object, users who can create and download Bags should have access to those datastreams. However, the module does check the current users' access to a datastream before adding it to the Bag.
