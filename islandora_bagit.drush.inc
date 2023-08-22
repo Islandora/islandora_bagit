@@ -42,6 +42,11 @@ function islandora_bagit_drush_command() {
       'Standard example (for collection)' => 'drush --user=fedoraAdmin create-islandora-bag collection islandora:sp_basic_image_collection',
       'Alias example' => 'drush --user=fedoraAdmin cib object islandora:190',
     ),
+    'options' => array(
+      'resume' => array(
+        'description' => 'Resume a prior incomplete operation, retaining completed content.',
+      ),
+    ),
     'aliases' => array('cib'),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
@@ -89,7 +94,8 @@ function drush_islandora_bagit_create_islandora_bag($type = 'object', $pid = NUL
   foreach ($objects_to_bag as $object_to_bag_pid) {
     try {
       $islandora_object = islandora_object_load($object_to_bag_pid);
-      islandora_bagit_create_bag($islandora_object);
+      $resume = (bool) drush_get_option('resume');
+      islandora_bagit_create_bag($islandora_object, $resume);
     }
     catch (Exception $e) {
       drush_print("Sorry, Islandora cannot create the Bag: " . $e->getMessage());
